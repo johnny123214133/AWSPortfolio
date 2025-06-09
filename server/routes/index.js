@@ -1,0 +1,8 @@
+export {default as indexRouter} from './indexRouter.js'
+export {default as locationRouter} from './locationRouter.js'
+export {default as routeRouter} from './routeRouter.js'
+export {default as tripRouter} from './tripRouter.js'
+export {default as payeeRouter} from './payeeRouter.js'
+export {default as paymentMethodRouter} from './paymentMethodRouter.js'
+export {default as paymentInteractionRouter} from './paymentInteractionRouter.js'
+export {default as startInteractionRouter} from './startInteractionRouter.js'
