@@ -5,7 +5,7 @@ from .extract_bids import extract_bids_json
 
 app = Flask(__name__)
 
-port = os.getenv("API_PORT", "8080")
+port = os.getenv("API_PORT", "8082")
 
 
 # @app.route('/api/items', methods=['POST'])
