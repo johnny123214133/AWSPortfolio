@@ -123,10 +123,10 @@ function NavBar() {
 					<Navbar.Collapse id="basic-navbar-nav">
 					<Stack className="pt-3 px-2 bg-white" direction="vertical">
 						<Row>
-							<Stack direction="horizontal" gap={3}>
-								<Button variant="link" onClick={handleNavigation} route="" className="navbar-link"><b>Zach's Portfolio</b></Button>
-								<Button variant="link" onClick={handleNavigation} route='commuteDashboard' className="navbar-link">Commute Dashboard</Button>
-	      				<Button variant="link" onClick={handleNavigation} route='smsPaymentLoop' className="navbar-link">SMS Payment Loop</Button>
+							<Stack direction="horizontal" className="mb-2" gap={3}>
+								<Button variant="link" onClick={handleNavigation} route="" className="navbar-link bg-transparent border-0 shadow-none"><b>Zach's Portfolio</b></Button>
+								{/*<Button variant="link" onClick={handleNavigation} route='commuteDashboard' className="navbar-link bg-transparent border-0 shadow-none">Commute Dashboard</Button>*/}
+	      				{/*<Button variant="link" onClick={handleNavigation} route='smsPaymentLoop' className="navbar-link bg-transparent border-0 shadow-none">SMS Payment Loop</Button>*/}
 							</Stack>
 						</Row>
 						<Row className="pt-1">

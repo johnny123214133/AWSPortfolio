@@ -10,3 +10,103 @@
     background-color: #fff;
     border-color: #fff;
 }
+
+.home-page {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+.home-page__header h1 {
+  margin: 0 0 1.5rem;
+  font-size: 1.75rem;
+}
+
+.project-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid #e0e0e0;
+}
+
+.project-list__item {
+  border-bottom: 1px solid #e0e0e0;
+}
+
+/* The whole line is the clickable toggle -- a full-width <button>
+   rather than a <div onClick>, so it's keyboard-operable and reads
+   correctly to screen readers (aria-expanded/aria-controls below). */
+.project-list__toggle {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 0.85rem 0.25rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  cursor: pointer;
+  transition: color 150ms ease;
+}
+
+.project-list__toggle:hover,
+.project-list__toggle:focus-visible {
+  color: #777; /* the "lighten on hover" effect */
+}
+
+/* CSS-only expand/collapse animation via an animatable grid track,
+   avoids measuring content height in JS. */
+.project-list__panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 200ms ease;
+}
+
+.project-list__panel--open {
+  grid-template-rows: 1fr;
+}
+
+.project-list__panel-content {
+  overflow: hidden;
+  min-height: 0;
+  padding: 0 0.25rem;
+}
+
+.project-list__panel--open .project-list__panel-content {
+  padding-bottom: 1rem;
+}
+
+.project-list__panel-content p {
+  margin: 0 0 0.75rem;
+  color: #333;
+  font-size: 0.95rem;
+}
+
+/* Copied from the bid-extraction feature's .btn (BidExtractionDashboard.css)
+   so "View project" is styled identically, not just approximated with
+   separately-maintained matching values. Keep these in sync manually,
+   or pull both into a shared stylesheet if this drifts again. */
+.btn {
+  display: inline-block;
+  margin: 0;
+  padding: 0.5rem 1.1rem;
+  border: 1px solid #c7c7c7;
+  border-radius: 4px;
+  background: #f5f5f5;
+  color: #1a1a1a;
+  font: inherit;
+  font-size: 0.95rem;
+  line-height: 1.2;
+  text-align: center;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: #ebebeb;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

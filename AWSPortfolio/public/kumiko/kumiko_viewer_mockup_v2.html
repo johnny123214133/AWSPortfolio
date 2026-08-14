@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kumiko CAD — Triangle Viewer</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #f0efe8;
+      --surface:   #ffffff;
+      --surface2:  #f5f4f0;
+      --border:    rgba(0,0,0,0.09);
+      --border-hi: rgba(0,0,0,0.16);
+      --text-pri:  #1a1a18;
+      --text-sec:  #5f5e5a;
+      --text-ter:  #8a8982;
+      --accent:    #7F77DD;
+      --accent-hi: #534AB7;
+      --green:     #0F6E56;
+      --green-bg:  #E1F5EE;
+      --amber:     #b08030;
+      --toolbar-h: 48px;
+      --status-h:  28px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:        #1a1a18;
+        --surface:   #262624;
+        --surface2:  #1e1e1c;
+        --border:    rgba(255,255,255,0.08);
+        --border-hi: rgba(255,255,255,0.15);
+        --text-pri:  #d4d2c8;
+        --text-sec:  #888780;
+        --text-ter:  #555450;
+        --accent:    #9992EE;
+        --accent-hi: #7F77DD;
+        --green:     #1D9E75;
+        --green-bg:  #0a2820;
+        --amber:     #c8a96e;
+      }
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text-pri);
+      font-size: 13px;
+    }
+
+    /* ── App Shell ─────────────────────────────────── */
+    .app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* ── App Header ────────────────────────────────── */
+    .app-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 16px;
+      height: 40px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .app-wordmark {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--text-pri);
+    }
+    .app-wordmark span {
+      color: var(--accent);
+    }
+    .header-sep { width: 1px; height: 16px; background: var(--border-hi); }
+    .app-breadcrumb {
+      font-size: 12px;
+      color: var(--text-sec);
+    }
+    .header-spacer { flex: 1; }
+    .header-badge {
+      font-size: 11px;
+      font-weight: 500;
+      padding: 2px 8px;
+      border-radius: 20px;
+      background: var(--green-bg);
+      color: var(--green);
+      border: 1px solid rgba(15, 110, 86, 0.2);
+    }
+
+    /* ── Workspace ─────────────────────────────────── */
+    .workspace {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+    }
+
+    /* ── Left: Canvas Area ─────────────────────────── */
+    .canvas-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    /* ── Toolbar ───────────────────────────────────── */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      padding: 0 12px;
+      height: var(--toolbar-h);
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .toolbar-group {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+    .toolbar-sep {
+      width: 1px;
+      height: 20px;
+      background: var(--border-hi);
+      margin: 0 8px;
+    }
+    .toolbar-label {
+      font-size: 11px;
+      color: var(--text-ter);
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-right: 6px;
+    }
+
+    /* Pattern toggle buttons */
+    .pattern-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 11px;
+      border-radius: 6px;
+      border: 1px solid var(--border-hi);
+      background: var(--surface2);
+      color: var(--text-sec);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.12s ease;
+      white-space: nowrap;
+    }
+    .pattern-btn:hover {
+      background: var(--bg);
+      color: var(--text-pri);
+      border-color: var(--border-hi);
+    }
+    .pattern-btn.active {
+      background: var(--accent);
+      border-color: var(--accent-hi);
+      color: #fff;
+    }
+    .pattern-btn .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+      opacity: 0.7;
+      flex-shrink: 0;
+    }
+
+    /* View mode buttons */
+    .view-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 5px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-sec);
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.1s ease;
+    }
+    .view-btn:hover {
+      background: var(--surface2);
+      border-color: var(--border-hi);
+      color: var(--text-pri);
+    }
+    .view-btn.active {
+      background: var(--surface2);
+      border-color: var(--border-hi);
+      color: var(--accent);
+    }
+
+    /* Icon-only buttons */
+    .icon-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 5px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-sec);
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.1s ease;
+    }
+    .icon-btn:hover {
+      background: var(--surface2);
+      border-color: var(--border-hi);
+      color: var(--text-pri);
+    }
+
+    .toolbar-spacer { flex: 1; }
+
+    /* ── Canvas Viewport ───────────────────────────── */
+    .viewport {
+      flex: 1;
+      position: relative;
+      background: var(--surface2);
+      overflow: hidden;
+    }
+    canvas#viewer {
+      display: block;
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* ── Status Bar ────────────────────────────────── */
+    .statusbar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 0 14px;
+      height: var(--status-h);
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: var(--text-ter);
+    }
+    .status-item strong {
+      font-weight: 500;
+      color: var(--text-sec);
+    }
+    .status-sep { width: 1px; height: 12px; background: var(--border-hi); }
+
+    /* ── Right: Inspector Panel ────────────────────── */
+    .inspector-wrap {
+      position: relative;
+      display: flex;
+      flex-shrink: 0;
+    }
+
+    /* The tab sits on the left edge of the wrap, always visible */
+    .panel-tab {
+      position: absolute;
+      left: -20px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 10;
+      width: 20px;
+      height: 48px;
+      border: 1px solid var(--border-hi);
+      border-right: none;
+      border-radius: 6px 0 0 6px;
+      background: var(--surface);
+      color: var(--text-ter);
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.15s, background 0.15s;
+      padding: 0;
+      line-height: 1;
+    }
+    .panel-tab:hover {
+      color: var(--accent);
+      background: var(--surface2);
+    }
+    /* When panel is collapsed the tab flips its arrow and detaches from the right edge */
+    .inspector-wrap.collapsed .panel-tab {
+      left: -20px;
+      border-right: 1px solid var(--border-hi);
+      border-radius: 6px;
+    }
+
+    .inspector {
+      width: 240px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      overflow-y: auto;
+      overflow-x: hidden;
+      transition: width 0.2s ease, opacity 0.2s ease;
+    }
+    .inspector-wrap.collapsed .inspector {
+      width: 0;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .canvas-area {
+      transition: border-right-color 0.15s ease;
+    }
+    .inspector-section {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .inspector-section:last-child { border-bottom: none; }
+    .ins-head {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--text-ter);
+      margin-bottom: 10px;
+    }
+    .ins-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 5px;
+      gap: 6px;
+    }
+    .ins-label {
+      font-size: 12px;
+      color: var(--text-sec);
+      flex-shrink: 0;
+    }
+    .ins-value {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-pri);
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      word-break: break-all;
+    }
+    .ins-value.mono {
+      font-family: ui-monospace, "SF Mono", monospace;
+      font-size: 11px;
+    }
+    .ins-pill {
+      font-size: 10px;
+      font-weight: 500;
+      padding: 1px 6px;
+      border-radius: 10px;
+      background: var(--green-bg);
+      color: var(--green);
+    }
+    .ins-pill.amber {
+      background: rgba(176, 128, 48, 0.12);
+      color: var(--amber);
+    }
+    .ins-pill.purple {
+      background: rgba(127, 119, 221, 0.12);
+      color: var(--accent);
+    }
+    .ins-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 8px 0;
+    }
+    /* Coordinate table rows */
+    .coord-group-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--text-ter);
+      margin: 8px 0 4px;
+    }
+    .coord-group-label:first-child { margin-top: 0; }
+    .coord-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 4px;
+      padding: 2px 0;
+    }
+    .coord-id {
+      font-size: 11px;
+      font-family: ui-monospace, "SF Mono", monospace;
+      color: var(--text-sec);
+      flex-shrink: 0;
+      min-width: 52px;
+    }
+    .coord-name {
+      font-size: 11px;
+      color: var(--text-ter);
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .coord-val {
+      font-size: 11px;
+      font-family: ui-monospace, "SF Mono", monospace;
+      color: var(--accent);
+      text-align: right;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+
+    /* Strip color swatches in inspector */
+    .swatch-row {
+      display: flex;
+      gap: 6px;
+      margin-top: 2px;
+    }
+    .swatch {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      border: 1px solid var(--border-hi);
+      position: relative;
+    }
+    .swatch-label {
+      font-size: 10px;
+      color: var(--text-ter);
+      text-align: center;
+      margin-top: 2px;
+    }
+
+    /* Overlay layer toggles */
+    .layer-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .toggle-switch {
+      position: relative;
+      width: 28px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-track {
+      position: absolute;
+      inset: 0;
+      border-radius: 8px;
+      background: var(--border-hi);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .toggle-track::after {
+      content: '';
+      position: absolute;
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: white;
+      top: 3px; left: 3px;
+      transition: transform 0.15s;
+    }
+    input:checked + .toggle-track { background: var(--accent); }
+    input:checked + .toggle-track::after { transform: translateX(12px); }
+    .layer-name { font-size: 12px; color: var(--text-sec); }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- App Header -->
+  <header class="app-header">
+    <span class="app-wordmark">Kumiko <span>CAD</span></span>
+    <div class="header-sep"></div>
+    <span class="app-breadcrumb">Pattern Library → Triangle Viewer</span>
+    <div class="header-spacer"></div>
+    <span class="header-badge">Phase 2 — Pattern Renderer</span>
+  </header>
+
+  <!-- Workspace -->
+  <div class="workspace">
+
+    <!-- Canvas Area -->
+    <div class="canvas-area">
+
+      <!-- Toolbar -->
+      <div class="toolbar">
+
+        <!-- Pattern selector -->
+        <span class="toolbar-label">Pattern</span>
+        <div class="toolbar-group" id="patternGroup">
+          <button class="pattern-btn active" data-pattern="asanoha" onclick="selectPattern('asanoha', this)">
+            <span class="dot"></span>Asanoha
+          </button>
+          <button class="pattern-btn" data-pattern="tsumiishi" onclick="selectPattern('tsumiishi', this)">
+            <span class="dot"></span>Tsumiishi-kikko
+          </button>
+          <button class="pattern-btn" data-pattern="goma" onclick="selectPattern('goma', this)">
+            <span class="dot"></span>Goma
+          </button>
+        </div>
+
+        <div class="toolbar-sep"></div>
+
+        <!-- View mode -->
+        <span class="toolbar-label">View</span>
+        <div class="toolbar-group">
+          <button class="view-btn active" title="Diagram view — strips + annotations" onclick="setView('diagram', this)">
+            ⬡
+          </button>
+          <button class="view-btn" title="Schema view — record types + fields" onclick="setView('schema', this)">
+            ≡
+          </button>
+        </div>
+
+        <div class="toolbar-sep"></div>
+
+        <!-- Overlay toggles trigger repaint -->
+        <span class="toolbar-label">Overlays</span>
+        <div class="toolbar-group">
+          <button class="icon-btn" id="toggleCenterlines" title="Toggle centerlines" onclick="toggleLayer('centerlines', this)" style="color: #BA7517;">╌</button>
+          <button class="icon-btn" id="toggleJoints" title="Toggle joint dots" onclick="toggleLayer('joints', this)" style="color: var(--green);">⦿</button>
+          <button class="icon-btn" id="toggleAnnotations" title="Toggle callout annotations" onclick="toggleLayer('annotations', this)">↗</button>
+          <button class="icon-btn" id="toggleWireframe" title="Wireframe — show centerlines only, hide strip bodies" onclick="toggleLayer('wireframe', this)" style="opacity:0.35;">▣</button>
+          <button class="icon-btn" id="toggleCoordinates" title="Coordinates — label all key points in mm" onclick="toggleLayer('coordinates', this)" style="opacity:0.35;">⌖</button>
+        </div>
+
+        <div class="toolbar-spacer"></div>
+
+        <!-- Utility -->
+        <button class="icon-btn" title="Fit to view" onclick="fitView()">⊡</button>
+        <button class="icon-btn" title="Copy diagram as SVG">⎘</button>
+      </div>
+
+      <!-- Canvas viewport -->
+      <div class="viewport">
+        <canvas id="viewer"></canvas>
+      </div>
+
+      <!-- Status bar -->
+      <div class="statusbar">
+        <div class="status-item"><strong id="st-pattern">asanoha</strong></div>
+        <div class="status-sep"></div>
+        <div class="status-item"><strong id="st-strips">3</strong> strips</div>
+        <div class="status-item"><strong id="st-joints">4</strong> joints</div>
+        <div class="status-item"><strong id="st-pieces">3</strong> pieces</div>
+        <div class="status-sep"></div>
+        <div class="status-item">sideLength <strong>75mm</strong></div>
+        <div class="status-sep"></div>
+        <div class="status-item">builtin · read-only</div>
+      </div>
+    </div>
+
+    <!-- Inspector Panel -->
+    <div class="inspector-wrap">
+      <button class="panel-tab" id="btnPanelToggle" onclick="togglePanel()" title="Hide inspector panel">‹</button>
+      <div class="inspector" id="inspectorPanel">
+
+      <!-- Pattern identity -->
+      <div class="inspector-section">
+        <div class="ins-head">TrianglePattern</div>
+        <div class="ins-row">
+          <span class="ins-label">id</span>
+          <span class="ins-value mono" id="ins-id">builtin:asanoha-sixth</span>
+        </div>
+        <div class="ins-row">
+          <span class="ins-label">name</span>
+          <span class="ins-value" id="ins-name">Asanoha</span>
+        </div>
+        <div class="ins-row">
+          <span class="ins-label">version</span>
+          <span class="ins-value">2</span>
+        </div>
+        <div class="ins-row">
+          <span class="ins-label">sideLength</span>
+          <span class="ins-value">75 mm</span>
+        </div>
+        <div class="ins-row">
+          <span class="ins-label">status</span>
+          <span class="ins-pill">read-only</span>
+        </div>
+      </div>
+
+      <!-- Counts -->
+      <div class="inspector-section">
+        <div class="ins-head">Record Counts</div>
+        <div class="ins-row">
+          <span class="ins-label">stripProperties</span>
+          <span class="ins-value" id="ins-sprops">1</span>
+        </div>
+        <div class="ins-row">
+          <span class="ins-label">strips</span>
+          <span class="ins-value" id="ins-strips">3</span>
+        </div>
+        <div class="ins-row">
+          <span class="ins-label">joints</span>
+          <span class="ins-value" id="ins-joints">4</span>
+        </div>
+        <div class="ins-row">
+          <span class="ins-label">pieceTemplates</span>
+          <span class="ins-value" id="ins-pieces">3</span>
+        </div>
+      </div>
+
+      <!-- Strip properties -->
+      <div class="inspector-section">
+        <div class="ins-head">StripProperties · sp0</div>
+        <div class="ins-row">
+          <span class="ins-label">width</span>
+          <span class="ins-value">6.0 mm</span>
+        </div>
+        <div class="ins-row">
+          <span class="ins-label">thickness</span>
+          <span class="ins-value">6.0 mm</span>
+        </div>
+        <div class="ins-row">
+          <span class="ins-label">material</span>
+          <span class="ins-value">hinoki</span>
+        </div>
+        <div class="ins-row">
+          <span class="ins-label">grain</span>
+          <span class="ins-value">along</span>
+        </div>
+        <div class="ins-row">
+          <span class="ins-label">edgeProfile</span>
+          <span class="ins-value">null</span>
+        </div>
+        <div class="ins-divider"></div>
+        <div class="swatch-row">
+          <div>
+            <div class="swatch" style="background:#E8D5B0; border-color:#b08030;"></div>
+            <div class="swatch-label">body</div>
+          </div>
+          <div>
+            <div class="swatch" style="background:#C0EAD8; border-color:#0F6E56;"></div>
+            <div class="swatch-label">taper</div>
+          </div>
+          <div>
+            <div class="swatch" style="background:#f5f4f0; border-color:#b4b2a9;"></div>
+            <div class="swatch-label">tri</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Joints -->
+      <div class="inspector-section">
+        <div class="ins-head">Joints</div>
+        <div id="ins-joints-list">
+          <div class="ins-row">
+            <span class="ins-label">j0 — centroid</span>
+            <span class="ins-pill">taper 120°</span>
+          </div>
+          <div class="ins-row">
+            <span class="ins-label">j1 — A</span>
+            <span class="ins-pill">taper 60°</span>
+          </div>
+          <div class="ins-row">
+            <span class="ins-label">j2 — B</span>
+            <span class="ins-pill">taper 60°</span>
+          </div>
+          <div class="ins-row">
+            <span class="ins-label">j3 — C</span>
+            <span class="ins-pill">taper 60°</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Coordinates -->
+      <div class="inspector-section">
+        <div class="ins-head">Coordinates (mm)</div>
+        <div id="ins-coords-list"></div>
+      </div>
+
+      <!-- Overlay layers -->
+      <div class="inspector-section">
+        <div class="ins-head">Overlays</div>
+        <div class="layer-row">
+          <label class="toggle-switch">
+            <input type="checkbox" checked id="ov-centerlines" onchange="toggleOverlay('centerlines', this.checked)">
+            <span class="toggle-track"></span>
+          </label>
+          <span class="layer-name">Centerlines</span>
+        </div>
+        <div class="layer-row">
+          <label class="toggle-switch">
+            <input type="checkbox" checked id="ov-joints" onchange="toggleOverlay('joints', this.checked)">
+            <span class="toggle-track"></span>
+          </label>
+          <span class="layer-name">Joint dots</span>
+        </div>
+        <div class="layer-row">
+          <label class="toggle-switch">
+            <input type="checkbox" checked id="ov-annotations" onchange="toggleOverlay('annotations', this.checked)">
+            <span class="toggle-track"></span>
+          </label>
+          <span class="layer-name">Annotations</span>
+        </div>
+        <div class="layer-row">
+          <label class="toggle-switch">
+            <input type="checkbox" id="ov-scalebar" onchange="toggleOverlay('scalebar', this.checked)">
+            <span class="toggle-track"></span>
+          </label>
+          <span class="layer-name">Scale bar</span>
+        </div>
+        <div class="layer-row">
+          <label class="toggle-switch">
+            <input type="checkbox" id="ov-wireframe" onchange="toggleOverlay('wireframe', this.checked)">
+            <span class="toggle-track"></span>
+          </label>
+          <span class="layer-name">Wireframe (centerlines only)</span>
+        </div>
+        <div class="layer-row">
+          <label class="toggle-switch">
+            <input type="checkbox" id="ov-coordinates" onchange="toggleOverlay('coordinates', this.checked)">
+            <span class="toggle-track"></span>
+          </label>
+          <span class="layer-name">Coordinates (mm labels)</span>
+        </div>
+      </div>
+
+    </div><!-- /inspector -->
+    </div><!-- /inspector-wrap -->
+  </div><!-- /workspace -->
+</div><!-- /app -->
+
+<script>
+// ─── State ─────────────────────────────────────────────────────────────
+let currentPattern = 'asanoha';
+let currentView    = 'diagram';
+const layers = { centerlines: true, joints: true, annotations: true, scalebar: false, wireframe: false, coordinates: false };
+
+// ─── Pattern metadata (for inspector updates) ──────────────────────────
+const patternMeta = {
+  asanoha:    { id:'builtin:asanoha-sixth',         name:'Asanoha',         sprops:1, strips:3, joints:4, pieces:3 },
+  tsumiishi:  { id:'builtin:tsumiishi-kikko-sixth', name:'Tsumiishi-kikko', sprops:1, strips:3, joints:4, pieces:3 },
+  goma:       { id:'builtin:goma-sixth',            name:'Goma',            sprops:1, strips:3, joints:9, pieces:3 },
+};
+
+// ─── Canvas setup ──────────────────────────────────────────────────────
+const canvas = document.getElementById('viewer');
+const dpr = window.devicePixelRatio || 1;
+let W, H, ctx;
+
+function resizeCanvas() {
+  const vp = canvas.parentElement;
+  W = vp.clientWidth;
+  H = vp.clientHeight;
+  canvas.width  = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+  if (!ctx) ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  render();
+}
+
+window.addEventListener('resize', () => { ctx = null; resizeCanvas(); });
+
+// ─── Theme colors ──────────────────────────────────────────────────────
+function colors() {
+  const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  return {
+    dark,
+    bg:          dark ? '#262624' : '#f5f4f0',
+    triFill:     dark ? '#1e1e1c' : '#f0efe8',
+    triStroke:   dark ? '#444441' : '#b4b2a9',
+    stripFill:   dark ? '#c8a96e' : '#E8D5B0',
+    stripStroke: dark ? '#a07840' : '#b08030',
+    taperFill:   dark ? '#9FE1CB' : '#C0EAD8',
+    taperStroke: dark ? '#1D9E75' : '#0F6E56',
+    buttStroke:  dark ? '#7F77DD' : '#534AB7',
+    clrLine:     '#BA7517',
+    textPri:     dark ? '#d4d2c8' : '#1a1a18',
+    textSec:     dark ? '#888780' : '#5f5e5a',
+    lapFill:     dark ? '#444441' : '#D3D1C7',
+    lapStroke:   dark ? '#888780' : '#5f5e5a',
+    mitreStroke: dark ? '#1D9E75' : '#0F6E56',
+    mitreFill:   dark ? '#9FE1CB' : '#C0EAD8',
+    colA:{ fill: dark?'#c8a96e':'#E8D5B0', stroke: dark?'#a07840':'#b08030' },
+    colB:{ fill: dark?'#8ec8b0':'#C0EAD8', stroke: dark?'#1D9E75':'#0F6E56' },
+    colC:{ fill: dark?'#a8a0e0':'#DDDAF8', stroke: dark?'#7F77DD':'#534AB7' },
+  };
+}
+
+// ─── Geometry helpers ──────────────────────────────────────────────────
+function vec(a,b){ return [b[0]-a[0],b[1]-a[1]]; }
+function norm(v){ const l=Math.sqrt(v[0]*v[0]+v[1]*v[1]); return [v[0]/l,v[1]/l]; }
+function perp(v){ return [-v[1],v[0]]; }
+function add(p,v){ return [p[0]+v[0],p[1]+v[1]]; }
+function sc(v,s){ return [v[0]*s,v[1]*s]; }
+function lineIntersect(p1,p2,p3,p4){
+  const d1=vec(p1,p2), d2=vec(p3,p4);
+  const cross=d1[0]*d2[1]-d1[1]*d2[0];
+  if(Math.abs(cross)<1e-10) return null;
+  const t=((p3[0]-p1[0])*d2[1]-(p3[1]-p1[1])*d2[0])/cross;
+  return [p1[0]+t*d1[0], p1[1]+t*d1[1]];
+}
+
+// ─── Main render ───────────────────────────────────────────────────────
+function render() {
+  if (!ctx) ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  const c = colors();
+  ctx.fillStyle = c.bg;
+  ctx.fillRect(0, 0, W, H);
+
+  if (currentPattern === 'asanoha')   drawAsanoha(c);
+  if (currentPattern === 'tsumiishi') drawTsumiishi(c);
+  if (currentPattern === 'goma')      drawGoma(c);
+}
+
+// ─── Coordinate system helpers (centered) ─────────────────────────────
+function makeCoords(sideLen, scale) {
+  // Center the triangle in the canvas with some padding
+  const triW = sideLen * scale;
+  const triH = sideLen * Math.sqrt(3)/2 * scale;
+  const ox = (W - triW) / 2 - 60; // shift left for annotation column
+  const oy = (H + triH) / 2 + 20;
+  const mm = (x, y) => [ox + x * scale, oy - y * scale];
+  const cp = (p) => mm(p[0], p[1]);
+  return { ox, oy, S: scale, mm, cp };
+}
+
+// ─── Callout helper ────────────────────────────────────────────────────
+function callout(ctx, c, fromPt, rx, ty, title, lines) {
+  ctx.beginPath();
+  ctx.moveTo(fromPt[0]+5, fromPt[1]-4);
+  ctx.lineTo(rx, ty+4);
+  ctx.strokeStyle = c.dark?'#444441':'#c0bfb8';
+  ctx.lineWidth = 0.5;
+  ctx.setLineDash([3,2]); ctx.stroke(); ctx.setLineDash([]);
+  ctx.font = '500 11.5px sans-serif'; ctx.fillStyle = c.textPri; ctx.textAlign = 'left';
+  ctx.fillText(title, rx+4, ty);
+  ctx.font = '11px sans-serif'; ctx.fillStyle = c.textSec;
+  lines.forEach((l,i) => ctx.fillText(l, rx+4, ty+13*(i+1)));
+}
+
+// ─── ASANOHA ───────────────────────────────────────────────────────────
+function drawAsanoha(c) {
+  const { ox, oy, S, mm, cp } = makeCoords(75, Math.min(W,H)*0.0044);
+
+  const A=[0,0], B=[75,0], C=[37.5,64.95], G=[37.5,21.65];
+  const hw=3.0, taperD=4.5;
+
+  // Triangle
+  ctx.beginPath(); ctx.moveTo(...cp(A)); ctx.lineTo(...cp(B)); ctx.lineTo(...cp(C)); ctx.closePath();
+  ctx.fillStyle=c.triFill; ctx.fill();
+  ctx.strokeStyle=c.triStroke; ctx.lineWidth=1.5; ctx.stroke();
+
+  if (!layers.wireframe) {
+    [A,B,C].forEach(V => {
+      const dir=norm(vec(V,G)), rdir=norm(vec(G,V)), pv=perp(dir);
+      const vL=add(V,sc(pv,hw)), vR=add(V,sc(pv,-hw));
+      const gL=add(G,sc(pv,hw)), gR=add(G,sc(pv,-hw));
+      ctx.beginPath(); ctx.moveTo(...cp(vL)); ctx.lineTo(...cp(vR));
+      ctx.lineTo(...cp(gR)); ctx.lineTo(...cp(gL)); ctx.closePath();
+      ctx.fillStyle=c.stripFill; ctx.fill(); ctx.strokeStyle=c.stripStroke; ctx.lineWidth=1; ctx.stroke();
+      // Taper at V
+      const vTb=add(V,sc(dir,taperD));
+      const vtbL=add(vTb,sc(pv,hw)), vtbR=add(vTb,sc(pv,-hw));
+      ctx.beginPath(); ctx.moveTo(...cp(vL)); ctx.lineTo(...cp(vtbL)); ctx.lineTo(...cp(V)); ctx.closePath();
+      ctx.fillStyle=c.taperFill; ctx.fill(); ctx.strokeStyle=c.taperStroke; ctx.lineWidth=0.75; ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(...cp(vR)); ctx.lineTo(...cp(vtbR)); ctx.lineTo(...cp(V)); ctx.closePath();
+      ctx.fillStyle=c.taperFill; ctx.fill(); ctx.strokeStyle=c.taperStroke; ctx.lineWidth=0.75; ctx.stroke();
+      // Taper at G
+      const gTb=add(G,sc(rdir,taperD));
+      const gtbL=add(gTb,sc(pv,hw)), gtbR=add(gTb,sc(pv,-hw));
+      ctx.beginPath(); ctx.moveTo(...cp(gL)); ctx.lineTo(...cp(gtbL)); ctx.lineTo(...cp(G)); ctx.closePath();
+      ctx.fillStyle=c.taperFill; ctx.fill(); ctx.strokeStyle=c.taperStroke; ctx.lineWidth=0.75; ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(...cp(gR)); ctx.lineTo(...cp(gtbR)); ctx.lineTo(...cp(G)); ctx.closePath();
+      ctx.fillStyle=c.taperFill; ctx.fill(); ctx.strokeStyle=c.taperStroke; ctx.lineWidth=0.75; ctx.stroke();
+    });
+  }
+
+  // Wireframe: always draw centerlines when wireframe is on (override centerlines toggle)
+  if (layers.centerlines || layers.wireframe) {
+    ctx.setLineDash([5,3]); ctx.strokeStyle=c.clrLine; ctx.lineWidth=1;
+    [A,B,C].forEach(V => { ctx.beginPath(); ctx.moveTo(...cp(V)); ctx.lineTo(...cp(G)); ctx.stroke(); });
+    ctx.setLineDash([]);
+  }
+
+  if (layers.joints) {
+    [A,B,C,G].forEach(P => {
+      ctx.beginPath(); ctx.arc(...cp(P),4,0,Math.PI*2);
+      ctx.fillStyle=c.taperStroke; ctx.fill();
+      ctx.strokeStyle=c.bg; ctx.lineWidth=1; ctx.stroke();
+    });
+  }
+
+  // Vertex labels
+  ctx.font='500 13px sans-serif'; ctx.textAlign='center'; ctx.fillStyle=c.textPri;
+  ctx.fillText('A', cp(A)[0]-16, cp(A)[1]+6);
+  ctx.fillText('B', cp(B)[0]+16, cp(B)[1]+6);
+  ctx.fillText('C', cp(C)[0], cp(C)[1]-14);
+
+  if (layers.annotations) {
+    const rx = cp(B)[0] + 40;
+    callout(ctx,c,cp(G),     rx, H*0.28, 'j0 — taper · centroid',     ['notchType: taper · 3 members','angle: 120°']);
+    callout(ctx,c,cp(B),     rx, H*0.48, 'j1/j2/j3 — taper · vertices', ['notchType: taper · 1 member','angle: 60°']);
+    callout(ctx,c,mm(18,12), rx, H*0.66, 's0/s1/s2 — strips',           ['~43.3mm · 6×6mm hinoki','tapers at both ends']);
+  }
+
+  if (layers.coordinates) {
+    coordLabel(c, cp(A), A, 'bl', 'A');
+    coordLabel(c, cp(B), B, 'br', 'B');
+    coordLabel(c, cp(C), C, 't',  'C');
+    coordLabel(c, cp(G), G, 'r',  'G / j0');
+  }
+
+  if (layers.scalebar) drawScaleBar(c, ox, oy, S);
+}
+
+// ─── TSUMIISHI-KIKKO ───────────────────────────────────────────────────
+function drawTsumiishi(c) {
+  const { ox, oy, S, mm, cp } = makeCoords(75, Math.min(W,H)*0.0044);
+
+  const A=[0,0], B=[75,0], C=[37.5,64.95], G=[37.5,21.65];
+  const mAB=[37.5,0], mBC=[56.25,32.48], mCA=[18.75,32.48];
+  const hw=3.0, taperD=4.0;
+
+  ctx.beginPath(); ctx.moveTo(...cp(A)); ctx.lineTo(...cp(B)); ctx.lineTo(...cp(C)); ctx.closePath();
+  ctx.fillStyle=c.triFill; ctx.fill(); ctx.strokeStyle=c.triStroke; ctx.lineWidth=1.5; ctx.stroke();
+
+  if (!layers.wireframe) {
+    [[mAB,G],[mBC,G],[mCA,G]].forEach(([V,Gp]) => {
+      const dir=norm(vec(V,Gp)), rdir=norm(vec(Gp,V)), pv=perp(dir);
+      const vL=add(V,sc(pv,hw)), vR=add(V,sc(pv,-hw));
+      const gL=add(Gp,sc(pv,hw)), gR=add(Gp,sc(pv,-hw));
+      ctx.beginPath(); ctx.moveTo(...cp(vL)); ctx.lineTo(...cp(vR));
+      ctx.lineTo(...cp(gR)); ctx.lineTo(...cp(gL)); ctx.closePath();
+      ctx.fillStyle=c.stripFill; ctx.fill(); ctx.strokeStyle=c.stripStroke; ctx.lineWidth=1; ctx.stroke();
+      // Butt at midpoint
+      ctx.beginPath(); ctx.moveTo(...cp(vL)); ctx.lineTo(...cp(vR));
+      ctx.strokeStyle=c.buttStroke; ctx.lineWidth=2.5; ctx.stroke();
+      // Taper at centroid
+      const tb=add(Gp,sc(rdir,taperD));
+      const tbL=add(tb,sc(pv,hw)), tbR=add(tb,sc(pv,-hw));
+      ctx.beginPath(); ctx.moveTo(...cp(gL)); ctx.lineTo(...cp(tbL)); ctx.lineTo(...cp(Gp)); ctx.closePath();
+      ctx.fillStyle=c.taperFill; ctx.fill(); ctx.strokeStyle=c.taperStroke; ctx.lineWidth=0.75; ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(...cp(gR)); ctx.lineTo(...cp(tbR)); ctx.lineTo(...cp(Gp)); ctx.closePath();
+      ctx.fillStyle=c.taperFill; ctx.fill(); ctx.strokeStyle=c.taperStroke; ctx.lineWidth=0.75; ctx.stroke();
+    });
+  }
+
+  ctx.beginPath(); ctx.moveTo(...cp(A)); ctx.lineTo(...cp(B)); ctx.lineTo(...cp(C)); ctx.closePath();
+  ctx.strokeStyle=c.triStroke; ctx.lineWidth=1.5; ctx.stroke();
+
+  if (layers.centerlines || layers.wireframe) {
+    ctx.setLineDash([5,3]); ctx.strokeStyle=c.clrLine; ctx.lineWidth=1;
+    [[mAB,G],[mBC,G],[mCA,G]].forEach(([V,Gp]) => {
+      ctx.beginPath(); ctx.moveTo(...cp(V)); ctx.lineTo(...cp(Gp)); ctx.stroke();
+    });
+    ctx.setLineDash([]);
+  }
+
+  if (layers.joints) {
+    ctx.beginPath(); ctx.arc(...cp(G),4.5,0,Math.PI*2);
+    ctx.fillStyle=c.taperStroke; ctx.fill(); ctx.strokeStyle=c.bg; ctx.lineWidth=1; ctx.stroke();
+    [mAB,mBC,mCA].forEach(M => {
+      ctx.beginPath(); ctx.arc(...cp(M),4.5,0,Math.PI*2);
+      ctx.fillStyle=c.buttStroke; ctx.fill(); ctx.strokeStyle=c.bg; ctx.lineWidth=1.5; ctx.stroke();
+    });
+  }
+
+  ctx.font='500 13px sans-serif'; ctx.textAlign='center'; ctx.fillStyle=c.textPri;
+  ctx.fillText('A',cp(A)[0]-16,cp(A)[1]+6);
+  ctx.fillText('B',cp(B)[0]+16,cp(B)[1]+6);
+  ctx.fillText('C',cp(C)[0],cp(C)[1]-14);
+  ctx.font='11px sans-serif'; ctx.fillStyle=c.textSec;
+  ctx.fillText('mid AB',cp(mAB)[0],cp(mAB)[1]+16);
+  ctx.fillText('mid BC',cp(mBC)[0]+32,cp(mBC)[1]+4);
+  ctx.fillText('mid CA',cp(mCA)[0]-32,cp(mCA)[1]+4);
+
+  if (layers.annotations) {
+    const rx = cp(B)[0] + 40;
+    callout(ctx,c,cp(G),      rx, H*0.28, 'j0 — taper · centroid',       ['notchType: taper · angle: 120°','members: s0 s1 s2, role: end']);
+    callout(ctx,c,cp(mBC),    rx, H*0.46, 'j1/j2/j3 — butt · edge mids', ['notchType: butt · depth: 0','strip end square to grid strip face']);
+    callout(ctx,c,mm(37.5,11),rx, H*0.64, 's0/s1/s2 — strips',            ['midpoint → centroid · 21.65mm','templateId: sp0 · 6×6mm hinoki']);
+  }
+
+  if (layers.coordinates) {
+    coordLabel(c, cp(A),   A,   'bl', 'A');
+    coordLabel(c, cp(B),   B,   'br', 'B');
+    coordLabel(c, cp(C),   C,   't',  'C');
+    coordLabel(c, cp(G),   G,   'r',  'G / j0');
+    coordLabel(c, cp(mAB), mAB, 'b',  'mid AB / j1');
+    coordLabel(c, cp(mBC), mBC, 'r',  'mid BC / j2');
+    coordLabel(c, cp(mCA), mCA, 'l',  'mid CA / j3');
+  }
+
+  if (layers.scalebar) drawScaleBar(c, ox, oy, S);
+}
+
+// ─── GOMA ──────────────────────────────────────────────────────────────
+function drawGoma(c) {
+  const { ox, oy, S, mm, cp } = makeCoords(75, Math.min(W,H)*0.0044);
+
+  const sw=6.0, hw=sw/2;
+  function xBounds(y){ return [(37.5/64.95)*y, 75-(37.5/64.95)*y]; }
+  const [s0x1,s0x2]=xBounds(sw);
+  const s0={p1:[s0x1,sw],p2:[s0x2,sw]};
+  const G=[37.5,21.65];
+  function rotG(p,a){
+    const r=a*Math.PI/180, dx=p[0]-G[0], dy=p[1]-G[1];
+    return [G[0]+dx*Math.cos(r)-dy*Math.sin(r),G[1]+dx*Math.sin(r)+dy*Math.cos(r)];
+  }
+  const s1={p1:rotG(s0.p1,120),p2:rotG(s0.p2,120)};
+  const s2={p1:rotG(s0.p1,240),p2:rotG(s0.p2,240)};
+  const j01=lineIntersect(s0.p1,s0.p2,s1.p1,s1.p2);
+  const j02=lineIntersect(s0.p1,s0.p2,s2.p1,s2.p2);
+  const j12=lineIntersect(s1.p1,s1.p2,s2.p1,s2.p2);
+  const mitrLen=hw/Math.sqrt(3);
+
+  function drawGomaStrip(s,col,lapPts){
+    const dir=norm(vec(s.p1,s.p2)), rdir=norm(vec(s.p2,s.p1)), pv=perp(dir);
+    const p1L=add(s.p1,sc(pv,hw)), p1R=add(s.p1,sc(pv,-hw));
+    const p2L=add(s.p2,sc(pv,hw)), p2R=add(s.p2,sc(pv,-hw));
+    ctx.beginPath(); ctx.moveTo(...cp(p1L)); ctx.lineTo(...cp(p1R));
+    ctx.lineTo(...cp(p2R)); ctx.lineTo(...cp(p2L)); ctx.closePath();
+    ctx.fillStyle=col.fill; ctx.fill(); ctx.strokeStyle=col.stroke; ctx.lineWidth=1; ctx.stroke();
+    // Miters at both ends
+    [[s.p1,dir],[s.p2,rdir]].forEach(([pt,d]) => {
+      const mt=add(pt,sc(d,mitrLen));
+      const mtL=add(mt,sc(pv,hw)), mtR=add(mt,sc(pv,-hw));
+      const ptL=add(pt,sc(pv,hw)), ptR=add(pt,sc(pv,-hw));
+      ctx.beginPath(); ctx.moveTo(...cp(ptL)); ctx.lineTo(...cp(mtL)); ctx.lineTo(...cp(pt)); ctx.closePath();
+      ctx.fillStyle=c.mitreFill; ctx.globalAlpha=0.7; ctx.fill(); ctx.globalAlpha=1;
+      ctx.strokeStyle=c.mitreStroke; ctx.lineWidth=0.6; ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(...cp(ptR)); ctx.lineTo(...cp(mtR)); ctx.lineTo(...cp(pt)); ctx.closePath();
+      ctx.fillStyle=c.mitreFill; ctx.globalAlpha=0.7; ctx.fill(); ctx.globalAlpha=1;
+      ctx.strokeStyle=c.mitreStroke; ctx.lineWidth=0.6; ctx.stroke();
+    });
+    lapPts.forEach(({pos,face}) => {
+      const along=norm(vec(s.p1,s.p2));
+      const nL=add(pos,sc(along,-hw)), nR=add(pos,sc(along,hw));
+      const nLL=add(nL,sc(pv,hw)), nLR=add(nL,sc(pv,-hw));
+      const nRL=add(nR,sc(pv,hw)), nRR=add(nR,sc(pv,-hw));
+      ctx.beginPath(); ctx.moveTo(...cp(nLL)); ctx.lineTo(...cp(nLR));
+      ctx.lineTo(...cp(nRR)); ctx.lineTo(...cp(nRL)); ctx.closePath();
+      ctx.fillStyle=c.lapFill;
+      ctx.globalAlpha=face==='bottom'?0.6:0.25; ctx.fill(); ctx.globalAlpha=1;
+      ctx.strokeStyle=c.lapStroke; ctx.lineWidth=0.5; ctx.stroke();
+    });
+  }
+
+  ctx.beginPath(); ctx.moveTo(...cp([0,0])); ctx.lineTo(...cp([75,0])); ctx.lineTo(...cp([37.5,64.95])); ctx.closePath();
+  ctx.fillStyle=c.triFill; ctx.fill(); ctx.strokeStyle=c.triStroke; ctx.lineWidth=1.5; ctx.stroke();
+
+  if (!layers.wireframe) {
+    drawGomaStrip(s2,c.colC,[{pos:j02,face:'bottom'},{pos:j12,face:'bottom'}]);
+    drawGomaStrip(s0,c.colA,[{pos:j01,face:'bottom'},{pos:j02,face:'top'}]);
+    drawGomaStrip(s1,c.colB,[{pos:j01,face:'top'},{pos:j12,face:'top'}]);
+  } else {
+    // Wireframe: draw centerlines only for each strip
+    [
+      {s:s0, col:c.colA},
+      {s:s1, col:c.colB},
+      {s:s2, col:c.colC},
+    ].forEach(({s, col}) => {
+      ctx.beginPath(); ctx.moveTo(...cp(s.p1)); ctx.lineTo(...cp(s.p2));
+      ctx.strokeStyle = col.stroke; ctx.lineWidth = 1.5;
+      ctx.setLineDash([5,3]); ctx.stroke(); ctx.setLineDash([]);
+    });
+  }
+
+  ctx.beginPath(); ctx.moveTo(...cp([0,0])); ctx.lineTo(...cp([75,0])); ctx.lineTo(...cp([37.5,64.95])); ctx.closePath();
+  ctx.strokeStyle=c.triStroke; ctx.lineWidth=1.5; ctx.stroke();
+
+  if (layers.joints) {
+    [j01,j02,j12].forEach(pt => {
+      ctx.beginPath(); ctx.arc(...cp(pt),5,0,Math.PI*2);
+      ctx.fillStyle=c.lapStroke; ctx.fill(); ctx.strokeStyle=c.bg; ctx.lineWidth=1.5; ctx.stroke();
+    });
+    [s0.p1,s0.p2,s1.p1,s1.p2,s2.p1,s2.p2].forEach(pt => {
+      ctx.beginPath(); ctx.arc(...cp(pt),4,0,Math.PI*2);
+      ctx.fillStyle=c.mitreStroke; ctx.fill(); ctx.strokeStyle=c.bg; ctx.lineWidth=1; ctx.stroke();
+    });
+  }
+
+  ctx.font='500 13px sans-serif'; ctx.textAlign='center'; ctx.fillStyle=c.textPri;
+  ctx.fillText('A',cp([0,0])[0]-16,cp([0,0])[1]+6);
+  ctx.fillText('B',cp([75,0])[0]+16,cp([75,0])[1]+6);
+  ctx.fillText('C',cp([37.5,64.95])[0],cp([37.5,64.95])[1]-14);
+
+  if (layers.annotations) {
+    const rx = cp([75,0])[0] + 40;
+    callout(ctx,c,cp(j01), rx, H*0.26, 'halfLap joints (×3)',  ['notchType: halfLap · depth: 0.5','angle: 60° · face per member']);
+    callout(ctx,c,cp(s0.p2), rx, H*0.44, 'miter joints (×6)',  ['notchType: miter · angle: 60°','one per strip end']);
+    callout(ctx,c,mm(37.5,sw),rx,H*0.62, 's0/s1/s2',           ['parallel to AB/BC/CA','offset ≈ 1× strip width']);
+    ctx.font='500 11px sans-serif'; ctx.fillStyle=c.textSec; ctx.textAlign='left';
+    ctx.fillText('stacking: s1 top both · s0 mixed · s2 bottom both', rx+4, H*0.62+30);
+  }
+
+  if (layers.coordinates) {
+    coordLabel(c, cp([0,0]),        [0, 0],       'bl', 'A');
+    coordLabel(c, cp([75,0]),       [75, 0],      'br', 'B');
+    coordLabel(c, cp([37.5,64.95]), [37.5,64.95], 't',  'C');
+    coordLabel(c, cp(s0.p1), s0.p1, 'bl', 's0.p1');
+    coordLabel(c, cp(s0.p2), s0.p2, 'br', 's0.p2');
+    coordLabel(c, cp(s1.p1), s1.p1, 'tl', 's1.p1');
+    coordLabel(c, cp(s1.p2), s1.p2, 'b',  's1.p2');
+    coordLabel(c, cp(s2.p1), s2.p1, 'tr', 's2.p1');
+    coordLabel(c, cp(s2.p2), s2.p2, 'b',  's2.p2');
+    coordLabel(c, cp(j01), j01, 'tr', 'j0');
+    coordLabel(c, cp(j02), j02, 'tl', 'j1');
+    coordLabel(c, cp(j12), j12, 'b',  'j2');
+  }
+
+  if (layers.scalebar) drawScaleBar(c, ox, oy, S);
+}
+
+function drawScaleBar(c, ox, oy, S) {
+  const sbx=ox, sby=oy+34, sblen=25*S;
+  ctx.strokeStyle=c.textSec; ctx.lineWidth=1;
+  ctx.beginPath();
+  ctx.moveTo(sbx,sby); ctx.lineTo(sbx+sblen,sby);
+  ctx.moveTo(sbx,sby-4); ctx.lineTo(sbx,sby+4);
+  ctx.moveTo(sbx+sblen,sby-4); ctx.lineTo(sbx+sblen,sby+4);
+  ctx.stroke();
+  ctx.font='11px sans-serif'; ctx.fillStyle=c.textSec; ctx.textAlign='center';
+  ctx.fillText('25mm',sbx+sblen/2,sby+14);
+}
+
+// ─── Coordinate label helper ───────────────────────────────────────────
+// pt: canvas [x,y], mmPt: [x,y] in mm space, anchor: 'tl'|'tr'|'bl'|'br'|'t'|'b'|'l'|'r'
+// id: optional short identifier string shown above the coord value
+function coordLabel(c, canvasPt, mmPt, anchor, id) {
+  const x = mmPt[0], y = mmPt[1];
+  const fmt = v => parseFloat(v.toFixed(2)).toString();
+  const coordText = `(${fmt(x)}, ${fmt(y)})`;
+  const monoFont = 'ui-monospace, "SF Mono", monospace';
+  const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+  const coordSize = 10, idSize = 9, pad = 3, gap = 2;
+
+  ctx.font = `${coordSize}px ${monoFont}`;
+  const coordW = ctx.measureText(coordText).width;
+
+  let idW = 0, idText = '';
+  if (id) {
+    idText = id;
+    ctx.font = `600 ${idSize}px ${monoFont}`;
+    idW = ctx.measureText(idText).width;
+  }
+
+  const innerW = Math.max(coordW, idW);
+  const bw = innerW + pad * 2;
+  const coordH = coordSize, idH = id ? idSize : 0;
+  const bh = pad + (id ? idH + gap : 0) + coordH + pad;
+
+  let bx = canvasPt[0], by = canvasPt[1];
+  const off = 8;
+  if      (anchor === 'tr') { bx += off;           by -= off + bh; }
+  else if (anchor === 'tl') { bx -= off + bw;      by -= off + bh; }
+  else if (anchor === 'br') { bx += off;           by += off; }
+  else if (anchor === 'bl') { bx -= off + bw;      by += off; }
+  else if (anchor === 't')  { bx -= bw / 2;        by -= off + bh; }
+  else if (anchor === 'b')  { bx -= bw / 2;        by += off; }
+  else if (anchor === 'l')  { bx -= off + bw;      by -= bh / 2; }
+  else                      { bx += off;            by -= bh / 2; }
+
+  // Background pill
+  ctx.fillStyle   = dark ? 'rgba(26,26,24,0.92)' : 'rgba(255,255,255,0.94)';
+  ctx.strokeStyle = dark ? 'rgba(127,119,221,0.4)' : 'rgba(127,119,221,0.45)';
+  ctx.lineWidth   = 0.75;
+  roundRect(ctx, bx, by, bw, bh, 3);
+  ctx.fill(); ctx.stroke();
+
+  let textY = by + pad;
+
+  // ID line
+  if (id) {
+    ctx.font      = `600 ${idSize}px ${monoFont}`;
+    ctx.fillStyle = dark ? '#c8c6bc' : '#3a3a38';
+    ctx.textAlign = 'left';
+    ctx.fillText(idText, bx + pad, textY + idH - 1);
+    textY += idH + gap;
+  }
+
+  // Coord line
+  ctx.font      = `${coordSize}px ${monoFont}`;
+  ctx.fillStyle = dark ? '#9992EE' : '#534AB7';
+  ctx.textAlign = 'left';
+  ctx.fillText(coordText, bx + pad, textY + coordH - 1);
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.lineTo(x+w-r, y); ctx.arcTo(x+w, y, x+w, y+r, r);
+  ctx.lineTo(x+w, y+h-r); ctx.arcTo(x+w, y+h, x+w-r, y+h, r);
+  ctx.lineTo(x+r, y+h); ctx.arcTo(x, y+h, x, y+h-r, r);
+  ctx.lineTo(x, y+r); ctx.arcTo(x, y, x+r, y, r);
+  ctx.closePath();
+}
+
+// ─── Toolbar actions ───────────────────────────────────────────────────
+function selectPattern(pattern, btn) {
+  currentPattern = pattern;
+  document.querySelectorAll('.pattern-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  // Update inspector
+  const m = patternMeta[pattern];
+  document.getElementById('ins-id').textContent    = m.id;
+  document.getElementById('ins-name').textContent  = m.name;
+  document.getElementById('ins-sprops').textContent = m.sprops;
+  document.getElementById('ins-strips').textContent = m.strips;
+  document.getElementById('ins-joints').textContent = m.joints;
+  document.getElementById('ins-pieces').textContent = m.pieces;
+  document.getElementById('st-pattern').textContent = m.name;
+  document.getElementById('st-strips').textContent  = m.strips;
+  document.getElementById('st-joints').textContent  = m.joints;
+  document.getElementById('st-pieces').textContent  = m.pieces;
+  // Update joints list
+  updateJointsList(pattern);
+  updateCoordsList(pattern);
+  render();
+}
+
+// ─── Coordinate data per pattern ──────────────────────────────────────
+// Goma strip endpoints and intersections are computed from the same math
+// as the draw function so the panel values match the canvas labels exactly.
+function gomaCoords() {
+  const sw = 6.0, hw = sw / 2;
+  const xL = y => (37.5 / 64.95) * y;
+  const xR = y => 75 - xL(y);
+  const s0p1 = [xL(sw), sw];
+  const s0p2 = [xR(sw), sw];
+  const G = [37.5, 21.65];
+  function rotG(p, a) {
+    const r = a * Math.PI / 180, dx = p[0] - G[0], dy = p[1] - G[1];
+    return [G[0] + dx * Math.cos(r) - dy * Math.sin(r),
+            G[1] + dx * Math.sin(r) + dy * Math.cos(r)];
+  }
+  const s1p1 = rotG(s0p1, 120), s1p2 = rotG(s0p2, 120);
+  const s2p1 = rotG(s0p1, 240), s2p2 = rotG(s0p2, 240);
+  function isect(p1, p2, p3, p4) {
+    const d1 = [p2[0]-p1[0], p2[1]-p1[1]], d2 = [p4[0]-p3[0], p4[1]-p3[1]];
+    const cross = d1[0]*d2[1] - d1[1]*d2[0];
+    const t = ((p3[0]-p1[0])*d2[1] - (p3[1]-p1[1])*d2[0]) / cross;
+    return [p1[0]+t*d1[0], p1[1]+t*d1[1]];
+  }
+  return {
+    s0p1, s0p2, s1p1, s1p2, s2p1, s2p2,
+    j01: isect(s0p1, s0p2, s1p1, s1p2),
+    j02: isect(s0p1, s0p2, s2p1, s2p2),
+    j12: isect(s1p1, s1p2, s2p1, s2p2),
+  };
+}
+
+function updateCoordsList(pattern) {
+  const el = document.getElementById('ins-coords-list');
+  const f = v => parseFloat(v.toFixed(2)).toString();
+  const xy = (p) => `(${f(p[0])}, ${f(p[1])})`;
+
+  function group(label, rows) {
+    return `<div class="coord-group-label">${label}</div>` +
+      rows.map(([id, name, pt]) =>
+        `<div class="coord-row">
+           <span class="coord-id">${id}</span>
+           <span class="coord-name">${name}</span>
+           <span class="coord-val">${xy(pt)}</span>
+         </div>`
+      ).join('');
+  }
+
+  // Triangle vertices are the same for all patterns
+  const triRows = [
+    ['A',  'vertex',    [0, 0]],
+    ['B',  'vertex',    [75, 0]],
+    ['C',  'vertex',    [37.5, 64.95]],
+    ['G',  'centroid',  [37.5, 21.65]],
+  ];
+
+  let html = group('Triangle', triRows);
+
+  if (pattern === 'asanoha') {
+    html += group('Strip endpoints', [
+      ['s0.start', 'vertex A',    [0, 0]],
+      ['s0.end',   'centroid',    [37.5, 21.65]],
+      ['s1.start', 'vertex B',    [75, 0]],
+      ['s1.end',   'centroid',    [37.5, 21.65]],
+      ['s2.start', 'vertex C',    [37.5, 64.95]],
+      ['s2.end',   'centroid',    [37.5, 21.65]],
+    ]);
+
+  } else if (pattern === 'tsumiishi') {
+    html += group('Strip endpoints', [
+      ['s0.start', 'mid AB',   [37.5, 0]],
+      ['s0.end',   'centroid', [37.5, 21.65]],
+      ['s1.start', 'mid BC',   [56.25, 32.48]],
+      ['s1.end',   'centroid', [37.5, 21.65]],
+      ['s2.start', 'mid CA',   [18.75, 32.48]],
+      ['s2.end',   'centroid', [37.5, 21.65]],
+    ]);
+
+  } else if (pattern === 'goma') {
+    const g = gomaCoords();
+    html += group('Strip endpoints', [
+      ['s0.p1', 'start (≈ AB side)',  g.s0p1],
+      ['s0.p2', 'end (≈ AB side)',    g.s0p2],
+      ['s1.p1', 'start (≈ BC side)',  g.s1p1],
+      ['s1.p2', 'end (≈ BC side)',    g.s1p2],
+      ['s2.p1', 'start (≈ CA side)',  g.s2p1],
+      ['s2.p2', 'end (≈ CA side)',    g.s2p2],
+    ]);
+    html += group('halfLap intersections', [
+      ['j0', 's0 ∩ s1', g.j01],
+      ['j1', 's0 ∩ s2', g.j02],
+      ['j2', 's1 ∩ s2', g.j12],
+    ]);
+  }
+
+  el.innerHTML = html;
+}
+
+function updateJointsList(pattern) {
+  const el = document.getElementById('ins-joints-list');
+  const lists = {
+    asanoha: [
+      ['j0 — centroid','taper 120°',''],
+      ['j1 — vertex A','taper 60°',''],
+      ['j2 — vertex B','taper 60°',''],
+      ['j3 — vertex C','taper 60°',''],
+    ],
+    tsumiishi: [
+      ['j0 — centroid','taper 120°',''],
+      ['j1 — mid AB','butt 90°','amber'],
+      ['j2 — mid BC','butt 90°','amber'],
+      ['j3 — mid CA','butt 90°','amber'],
+    ],
+    goma: [
+      ['j0 — s0∩s1','halfLap 60°',''],
+      ['j1 — s0∩s2','halfLap 60°',''],
+      ['j2 — s1∩s2','halfLap 60°',''],
+      ['j3 — s0.p1','miter 60°','purple'],
+      ['j4 — s0.p2','miter 60°','purple'],
+      ['j5 — s1.p1','miter 60°','purple'],
+      ['j6 — s1.p2','miter 60°','purple'],
+      ['j7 — s2.p1','miter 60°','purple'],
+      ['j8 — s2.p2','miter 60°','purple'],
+    ],
+  };
+  el.innerHTML = (lists[pattern]||[]).map(([label,pill,cls]) =>
+    `<div class="ins-row"><span class="ins-label">${label}</span><span class="ins-pill ${cls}">${pill}</span></div>`
+  ).join('');
+}
+
+function setView(view, btn) {
+  currentView = view;
+  document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+function toggleLayer(layer, btn) {
+  layers[layer] = !layers[layer];
+  // wireframe and coordinates use accent-color active style instead of opacity
+  if (layer === 'wireframe' || layer === 'coordinates') {
+    btn.style.opacity = '1';
+    btn.style.color = layers[layer]
+      ? 'var(--accent)'
+      : 'var(--text-sec)';
+    btn.style.background = layers[layer]
+      ? 'var(--surface2)'
+      : 'transparent';
+    btn.style.borderColor = layers[layer]
+      ? 'var(--border-hi)'
+      : 'transparent';
+  } else {
+    btn.style.opacity = layers[layer] ? '1' : '0.35';
+  }
+  // sync checkboxes
+  const cb = document.getElementById('ov-' + layer);
+  if (cb) cb.checked = layers[layer];
+  render();
+}
+
+function toggleOverlay(layer, checked) {
+  layers[layer] = checked;
+  render();
+}
+
+function fitView() { render(); }
+
+function togglePanel() {
+  const wrap = document.querySelector('.inspector-wrap');
+  const btn  = document.getElementById('btnPanelToggle');
+  const nowCollapsed = wrap.classList.toggle('collapsed');
+  btn.textContent = nowCollapsed ? '›' : '‹';
+  btn.title       = nowCollapsed ? 'Show inspector panel' : 'Hide inspector panel';
+  setTimeout(() => { ctx = null; resizeCanvas(); }, 220);
+}
+
+// ─── Boot ──────────────────────────────────────────────────────────────
+updateJointsList('asanoha');
+updateCoordsList('asanoha');
+requestAnimationFrame(() => resizeCanvas());
+</script>
+</body>
+</html>
