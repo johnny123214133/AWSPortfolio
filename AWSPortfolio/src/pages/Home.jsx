@@ -16,7 +16,8 @@ export default function Home() {
       <Stack direction="vertical" gap={2}>
         <h1>Zach's Portfolio</h1>
         <Button variant="link" onClick={handleNavigation} route='commuteDashboard' className="navbar-link">Commute Dashboard</Button>
-        <Button variant="link" onClick={handleNavigation} route='smsPaymentLoop' className="navbar-link">SMS Payment Loop</Button>
+        {/*<Button variant="link" onClick={handleNavigation} route='smsPaymentLoop' className="navbar-link">SMS Payment Loop</Button>*/}
+        <Button variant="link" onClick={handleNavigation} route='OCRDataExtraction' className="navbar-link">PDF Bid Data Extraction with OCR</Button>
       </Stack>
     </>
   )

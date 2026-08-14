@@ -7,6 +7,7 @@ import Layout from "./pages/Layout";
 import Home from "./pages/Home";
 import CommuteDashboardPage from "./pages/CommuteDashboardPage";
 import SMSPaymentLoopPage from "./pages/SMSPaymentLoopPage";
+import OCRDataExtractionPage from "./pages/OCRDataExtractionPage";
 import NoPage from "./pages/NoPage";
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
             <Route index element={<Home />} />
             <Route path="commuteDashboard" element={<CommuteDashboardPage />} />
             <Route path="smsPaymentLoop" element={<SMSPaymentLoopPage />} />
+            <Route path="OCRDataExtraction" element={<OCRDataExtractionPage />} />
             <Route path="*" element={<NoPage />} />
           </Route>
         </Routes>

@@ -25,7 +25,7 @@ function NavBar() {
 		<>
 			{/* large format */}
 			<MediaQuery minWidth={LG_CUTOFF + 1}>
-				<Navbar className="p-0 bg-white" sticky="top" expand="lg">
+				<Navbar className="p-0 bg-white container-fluid" sticky="top" expand="lg">
 				<Container fluid>
 					
 					<Navbar.Toggle aria-controls="basic-navbar-nav" />
