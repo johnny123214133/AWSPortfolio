@@ -1,66 +1,37 @@
 import { routeRepository } from '../repositories/index.js'
 
+// Only getRouteByOriginAndDestination is reachable from the dispatcher
+// -- see the note at the top of locationService.js, same reasoning
+// applies here for getRouteById (internal building block, used by
+// tripService) versus createRoute/deleteRouteById (currently unused,
+// kept for completeness).
+
 export async function getRouteById(id) {
-	// Cases:
-	// route is in the database: return route
-	// route is not in the database: return 40x error
-	try {
-		// console.log('I\'m in the service layer!')
-		return await routeRepository.getRouteById(id)
-	}
-	catch (err) {
-		throw err
-	}
+	return routeRepository.getRouteById(id)
 }
 
 export async function getRouteByOriginAndDestination(originId, destId) {
-	// Cases:
-	// route is in the database: return route
-	// route is not in the database: create and return a new route, 201 created
-	try {
-		return await routeRepository.getRouteByOriginAndDestination(originId, destId)
-		.then((route) => {
-			if (Object.keys(route).length == 0) {
-				var body = {
-					'originId' : originId,
-					'destId' : destId
-				}
-				// return {}
-				return routeRepository.createRoute(body).then(() => {
-					// return {}
-					return routeRepository.getRouteByOriginAndDestination(originId, destId)
-				})
-			}
-			else return route
-		})
-	}
-	catch (err) {
-		throw err
-	}
+	const existing = await routeRepository.getRouteByOriginAndDestination(originId, destId)
+	if (Object.keys(existing).length > 0) return existing
+
+	await routeRepository.createRoute({ originId, destId })
+	return routeRepository.getRouteByOriginAndDestination(originId, destId)
 }
 
 export async function createRoute(body) {
-	// Cases: 
-	// route is in the database: return 200 ok
-	// route is not in the database: create and return 201 created
-	try {
-		if (Object.keys(await getRouteByOriginAndDestination(body.originId, body.destId)).length == 0) {
-			await routeRepository.createRoute(body)
-		}
-	}
-	catch (err) {
-		throw err
+	// note: getRouteByOriginAndDestination above already creates the
+	// route if it doesn't exist, so this dedupe check will basically
+	// always find something, and routeRepository.createRoute below
+	// rarely (if ever) actually runs. Pre-existing behavior from before
+	// this rewrite -- left as-is since this function isn't currently
+	// reachable from the dispatcher, but worth knowing if you ever wire
+	// it up directly.
+	const existing = await getRouteByOriginAndDestination(body.originId, body.destId)
+	if (Object.keys(existing).length === 0) {
+		await routeRepository.createRoute(body)
 	}
 }
 
 export async function deleteRouteById(id) {
-	// Cases:
-	// route is in the database: return route
-	// route is not in the database: return 40x error
-	try {
-		await routeRepository.deleteRouteById(id)
-	}
-	catch (err) {
-		throw err
-	}
+	await routeRepository.deleteRouteById(id)
 }

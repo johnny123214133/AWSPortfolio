@@ -215,10 +215,10 @@ function NavBar() {
 			<MediaQuery maxWidth={LG_CUTOFF}>
 				<Navbar className="px-3 pt-3 bg-white" sticky="top" expand="lg">
 				<Container fluid>
-					<Navbar.Brand>
+					{/*<Navbar.Brand>
 						<Button variant="link" onClick={handleNavigation} route="" className="navbar-link"><h4>Zach's Portfolio</h4></Button>
 						<Button variant="link" className="navbar-link"><h5>Commute Dashboard</h5></Button>
-					</Navbar.Brand>
+					</Navbar.Brand>*/}
 					<Navbar.Toggle aria-controls="basic-navbar-nav" />
 					<Navbar.Collapse id="basic-navbar-nav">
 					<Stack className="mb-2 px-2 bg-white" direction="vertical">

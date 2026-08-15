@@ -1,0 +1,23 @@
+/*
+  Shared show/hide-by-breakpoint utility classes, replacing
+  react-responsive's <MediaQuery> in most components (see each
+  component for the one deliberate exception: GoogleMap.jsx keeps
+  MediaQuery, since CSS-hiding both versions there would still
+  instantiate two live Google Maps instances at once).
+
+  IMPORTANT: 992px here must be kept in sync by hand with LG_CUTOFF in
+  ../utils/constants.js (991, i.e. "large" starts at 992px) -- CSS
+  can't read a JS constant directly.
+*/
+
+@media (min-width: 992px) {
+	.mobile-only {
+		display: none !important;
+	}
+}
+
+@media (max-width: 991px) {
+	.desktop-only {
+		display: none !important;
+	}
+}

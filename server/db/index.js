@@ -1,31 +1,22 @@
 import mysql from 'mysql2/promise'
 
-var commutePool;
-export function getCommutePool() {
-	if (commutePool) {
-		return commutePool
-	}
-	const config = {
-		host: process.env.MYSQL_HOST,
-		user: process.env.MYSQL_USER,
-		password: process.env.MYSQL_PASSWORD,
-		database: process.env.MYSQL_COMMUTE_DB
-	};
-	commutePool = mysql.createPool(config)
-	return commutePool
-};
+let commutePool
 
-var SMSPool;
-export function getSMSPool() {
-	if (SMSPool) {
-		return SMSPool
-	}
-	const config = {
+export function getCommutePool() {
+	if (commutePool) return commutePool
+
+	commutePool = mysql.createPool({
 		host: process.env.MYSQL_HOST,
 		user: process.env.MYSQL_USER,
 		password: process.env.MYSQL_PASSWORD,
-		database: process.env.MYSQL_SMS_DB
-	};
-	SMSPool = mysql.createPool(config)
-	return SMSPool
-};
+		database: process.env.MYSQL_COMMUTE_DB,
+		// `trip.start_time` is a naive DATETIME (no timezone info) and
+		// we always write/read it as UTC ourselves (see
+		// utils/dateUtils.js) -- telling the driver to treat it as UTC
+		// consistently on both ends means it round-trips correctly,
+		// instead of mysql2 silently re-interpreting it in whatever
+		// timezone this server process happens to be running in.
+		timezone: 'Z',
+	})
+	return commutePool
+}

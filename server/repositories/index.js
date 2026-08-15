@@ -1,6 +1,3 @@
 export * as locationRepository from './locationRepository.js'
 export * as routeRepository from './routeRepository.js'
 export * as tripRepository from './tripRepository.js'
-export * as payeeRepository from './payeeRepository.js'
-export * as paymentMethodRepository from './paymentMethodRepository.js'
-export * as paymentInteractionRepository from './paymentInteractionRepository.js'

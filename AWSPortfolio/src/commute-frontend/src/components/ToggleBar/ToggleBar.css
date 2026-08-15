@@ -1,0 +1,19 @@
+/*
+  IMPORTANT: 1024px here must be kept in sync by hand with
+  DAY_SELECTOR_DROPDOWN_CUTOFF in ../../utils/constants.js -- CSS can't
+  read a JS constant directly. Deliberately independent of
+  ../../styles/responsive.css's 991/992 breakpoint; this one only
+  controls the day selector's button-row vs. dropdown switch.
+*/
+
+@media (max-width: 1024px) {
+	.day-selector-buttons {
+		display: none !important;
+	}
+}
+
+@media (min-width: 1025px) {
+	.day-selector-dropdown {
+		display: none !important;
+	}
+}

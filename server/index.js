@@ -1,42 +1,32 @@
 import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
-import {indexRouter, locationRouter, routeRouter, tripRouter, payeeRouter, paymentMethodRouter, paymentInteractionRouter, startInteractionRouter} from './routes/index.js'
+
+import apiRouter from './api/index.js'
 import ErrorResponse from './utils/errorResponse.js'
 
 dotenv.config()
-
-let apiPort = process.env.API_PORT
 
 const app = express()
 app.use(cors())
 app.use(express.json())
 
-// app.get('/', async(req, res) => {
-// 	console.log('default response')
-// 	res.send('api root')
-// })
+app.use('/api', apiRouter)
 
-app.use('/api', indexRouter)
-app.use('/api/location', locationRouter)
-app.use('/api/route', routeRouter)
-app.use('/api/trip', tripRouter)
-
-app.use('/api/payee', payeeRouter)
-app.use('/api/paymentMethod', paymentMethodRouter)
-app.use('/api/paymentInteraction', paymentInteractionRouter)
-
-app.use('/api/startInteraction', startInteractionRouter)
-// TODO: set up streaming of payment interaction entity during interaction loop
-
-// general error handler
-app.use(function (err, req, res, next) {
-  console.log('An Error Occurred: ', err.status)
-  const error = new ErrorResponse(err.status, err.name || err.error, err.messages)
-  console.log(error)
-  res.status(err.status || 500).send(error);
+// General error handler -- every route above passes errors to next()
+// as a { status, error, messages } object (see api/index.js), so this
+// just needs to shape and log the final response.
+app.use((err, req, res, next) => {
+	const response = new ErrorResponse(
+		err.status || 500,
+		err.error || 'Internal Server Error',
+		err.messages || ['An unexpected error occurred.']
+	)
+	console.error(response)
+	res.status(response.status).send(response)
 })
 
+const apiPort = process.env.API_PORT
 app.listen(apiPort, () => {
-	console.log('Server is runing on ' + apiPort + '.')
+	console.log(`Server is running on ${apiPort}.`)
 })
