@@ -22,6 +22,6 @@ export async function extractBidsFromPdf(file) {
   console.log(import.meta.env.VITE_OCR_API_URL)
 
   // const response = await axios.post(OCR_ENDPOINT, formData);
-  const response = await api.post(`/ocrapi/ocr`, formData);
+  const response = await api.post(`/ocr`, formData);
   return response.data;
 }
