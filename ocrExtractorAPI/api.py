@@ -9,7 +9,7 @@ app = Flask(__name__)
 
 port = os.getenv("API_PORT", "8082")
 
-CORS(app, resources={r"/api/*": {"origins": "*"}})
+CORS(app, resources={r"/ocrapi/*": {"origins": "*"}})
 
 
 # @app.route('/api/items', methods=['POST'])
@@ -46,7 +46,7 @@ if hasattr(app, "json"):
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-@app.route('/api/ocr', methods=['POST'])
+@app.route('/ocrapi/ocr', methods=['POST'])
 def extract_bid_data():
     # Check if the file part is present in the request
     if 'file' not in request.files:
@@ -72,7 +72,7 @@ def extract_bid_data():
     
     return jsonify({'error': 'Invalid file type. Only PDFs are allowed.'}), 400
 
-@app.route('/api', methods=['GET'])
+@app.route('/ocrapi', methods=['GET'])
 def ping():
     return jsonify({'message': "Hello there!"}), 200
 

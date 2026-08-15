@@ -54,7 +54,7 @@ export const projects = [
   },
   {
     id: "academic-paper-rag",
-    name: "arXiv CS Paper RAG (coming soon)",
+    name: "arXiv CS Paper RAG LLM (coming soon)",
     description:
       "A RAG-augmented LLM built on the few hundred most-cited Computer Science papers on arXiv. It will also serve as the foundation for a recommendation engine to help users explore trending and important topics in the field.",
     linkType: "internal",
