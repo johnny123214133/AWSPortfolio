@@ -3,7 +3,7 @@ import { useBidExtraction } from "../contexts/BidExtractionContext";
 
 // Point this at wherever the template actually lives -- a static asset
 // served by this app, or a backend route, depending on what you set up.
-const TEMPLATE_URL = "/templates/bid-data-template.xlsx";
+const TEMPLATE_URL = "/templates/sample_bid_summary.xlsx";
 
 export default function UploadSection() {
   const { file, selectFile, extract, isLoading, error } = useBidExtraction();

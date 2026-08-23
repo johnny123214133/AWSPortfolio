@@ -29,7 +29,7 @@ def extract_tables_by_page(
     borderless_tables: bool = True,
     min_confidence: int = 50,
 ) -> Dict[int, List]:
-    doc = PDF(src=pdf_bytes)
+    doc = PDF(src=pdf_bytes, pdf_text_extraction=False)
     return doc.extract_tables(
         ocr=ocr,
         implicit_rows=implicit_rows,
