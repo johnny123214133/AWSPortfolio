@@ -44,12 +44,14 @@ export const projects = [
   },
   {
     id: "kumiko-cad",
-    name: "Kumiko CAD (coming soon)",
+    name: "Kumiko CAD",
     description:
-      "A specialized CAD software tool for planning kumiko pattern grids. I've provided a very early mock up of the tool.",
-    linkType: "external",
-    link: "/kumiko/kumiko_viewer_mockup_v2.html",
-    buttonText: "View Mockup",
+      "A specialized CAD tool for designing kumiko panels on a triangular grid. Build parametric " +
+      "patterns in the pattern editor, lay them out across a panel in the panel editor, and export " +
+      "the parts list and even print a 1:1 scale mockup of the panel to help guide construction. This is the live tool, running entirely in your browser.",
+    linkType: "internal",
+    link: "/kumikoCAD",
+    buttonText: "Open Kumiko CAD",
     buttonDisabled: false,
   },
   {

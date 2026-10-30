@@ -1,0 +1,575 @@
+{
+  "id": "builtin:sakura-sixth",
+  "name": "Sakura B",
+  "readOnly": true,
+  "version": 3,
+  "sideLength": 75,
+  "patternParams": {
+    "thickStripWidth": {
+      "length": 6,
+      "unit": "mm"
+    },
+    "cornerSpacing": {
+      "length": 6,
+      "unit": "mm"
+    }
+  },
+  "stripProperties": [
+    {
+      "id": "sp0",
+      "width": 2,
+      "thickness": 6,
+      "material": "hinoki",
+      "grain": "along",
+      "color": "#e8d5b0",
+      "finish": "natural",
+      "edgeProfile": null
+    },
+    {
+      "id": "sp1",
+      "width": 6,
+      "thickness": 6,
+      "material": "hinoki",
+      "grain": "along",
+      "color": "#e8d5b0",
+      "finish": "natural",
+      "edgeProfile": null
+    }
+  ],
+  "vertices": {
+    "A": {
+      "x": 0,
+      "y": 0
+    },
+    "B": {
+      "x": 75,
+      "y": 0
+    },
+    "C": {
+      "x": 37.5,
+      "y": 64.9519
+    }
+  },
+  "centroid": {
+    "x": 37.5,
+    "y": 21.6506
+  },
+  "_note": "Reference snapshot generated from the sakura factory at cellWidth 75, gridStripWidth 0, patternStripWidth 3. Not what is rendered — the factory computes live geometry; this file supplies the template-level fields (id, name, patternParams, stripProperties, meta).",
+  "strips": [
+    {
+      "id": "s0",
+      "start": {
+        "x": 37.5,
+        "y": 50.9519
+      },
+      "end": {
+        "x": 37.5,
+        "y": 21.6506
+      },
+      "orientation": -1.5708,
+      "cuts": [
+        {
+          "jointId": "j1",
+          "position": {
+            "x": 37.5,
+            "y": 50.9519
+          },
+          "angle": 90,
+          "depth": 1,
+          "role": "end"
+        },
+        {
+          "jointId": "j0",
+          "position": {
+            "x": 37.5,
+            "y": 21.6506
+          },
+          "angle": 120,
+          "depth": 1,
+          "role": "end"
+        }
+      ]
+    },
+    {
+      "id": "s1",
+      "start": {
+        "x": 12.1244,
+        "y": 7
+      },
+      "end": {
+        "x": 37.5,
+        "y": 21.6506
+      },
+      "orientation": 0.5236,
+      "cuts": [
+        {
+          "jointId": "j2",
+          "position": {
+            "x": 12.1244,
+            "y": 7
+          },
+          "angle": 90,
+          "depth": 1,
+          "role": "end"
+        },
+        {
+          "jointId": "j0",
+          "position": {
+            "x": 37.5,
+            "y": 21.6506
+          },
+          "angle": 120,
+          "depth": 1,
+          "role": "end"
+        }
+      ]
+    },
+    {
+      "id": "s2",
+      "start": {
+        "x": 62.8756,
+        "y": 7
+      },
+      "end": {
+        "x": 37.5,
+        "y": 21.6506
+      },
+      "orientation": 2.618,
+      "cuts": [
+        {
+          "jointId": "j3",
+          "position": {
+            "x": 62.8756,
+            "y": 7
+          },
+          "angle": 90,
+          "depth": 1,
+          "role": "end"
+        },
+        {
+          "jointId": "j0",
+          "position": {
+            "x": 37.5,
+            "y": 21.6506
+          },
+          "angle": 120,
+          "depth": 1,
+          "role": "end"
+        }
+      ]
+    },
+    {
+      "id": "s3",
+      "start": {
+        "x": 31.1491,
+        "y": 53.9519
+      },
+      "end": {
+        "x": 43.8509,
+        "y": 53.9519
+      },
+      "orientation": 0,
+      "cuts": [
+        {
+          "jointId": "j4",
+          "position": {
+            "x": 31.1491,
+            "y": 53.9519
+          },
+          "angle": 60,
+          "depth": 1,
+          "role": "end"
+        },
+        {
+          "jointId": "j5",
+          "position": {
+            "x": 43.8509,
+            "y": 53.9519
+          },
+          "angle": 120,
+          "depth": 1,
+          "role": "end"
+        }
+      ]
+    },
+    {
+      "id": "s4",
+      "start": {
+        "x": 12.7017,
+        "y": 0
+      },
+      "end": {
+        "x": 6.3509,
+        "y": 11
+      },
+      "orientation": 2.0944,
+      "cuts": [
+        {
+          "jointId": "j6",
+          "position": {
+            "x": 12.7017,
+            "y": 0
+          },
+          "angle": 60,
+          "depth": 1,
+          "role": "end"
+        },
+        {
+          "jointId": "j7",
+          "position": {
+            "x": 6.3509,
+            "y": 11
+          },
+          "angle": 120,
+          "depth": 1,
+          "role": "end"
+        }
+      ]
+    },
+    {
+      "id": "s5",
+      "start": {
+        "x": 68.6491,
+        "y": 11
+      },
+      "end": {
+        "x": 62.2983,
+        "y": 0
+      },
+      "orientation": -2.0944,
+      "cuts": [
+        {
+          "jointId": "j8",
+          "position": {
+            "x": 68.6491,
+            "y": 11
+          },
+          "angle": 60,
+          "depth": 1,
+          "role": "end"
+        },
+        {
+          "jointId": "j9",
+          "position": {
+            "x": 62.2983,
+            "y": 0
+          },
+          "angle": 120,
+          "depth": 1,
+          "role": "end"
+        }
+      ]
+    }
+  ],
+  "joints": [
+    {
+      "id": "j0",
+      "position": {
+        "x": 37.5,
+        "y": 21.6506
+      },
+      "members": [
+        {
+          "stripId": "s0",
+          "role": "end"
+        },
+        {
+          "stripId": "s1",
+          "role": "end"
+        },
+        {
+          "stripId": "s2",
+          "role": "end"
+        }
+      ],
+      "notchType": "taper"
+    },
+    {
+      "id": "j1",
+      "position": {
+        "x": 37.5,
+        "y": 50.9519
+      },
+      "members": [
+        {
+          "stripId": "s0",
+          "role": "end"
+        }
+      ],
+      "notchType": "butt"
+    },
+    {
+      "id": "j2",
+      "position": {
+        "x": 12.1244,
+        "y": 7
+      },
+      "members": [
+        {
+          "stripId": "s1",
+          "role": "end"
+        }
+      ],
+      "notchType": "butt"
+    },
+    {
+      "id": "j3",
+      "position": {
+        "x": 62.8756,
+        "y": 7
+      },
+      "members": [
+        {
+          "stripId": "s2",
+          "role": "end"
+        }
+      ],
+      "notchType": "butt"
+    },
+    {
+      "id": "j4",
+      "position": {
+        "x": 31.1491,
+        "y": 53.9519
+      },
+      "members": [
+        {
+          "stripId": "s3",
+          "role": "end"
+        }
+      ],
+      "notchType": "miter"
+    },
+    {
+      "id": "j5",
+      "position": {
+        "x": 43.8509,
+        "y": 53.9519
+      },
+      "members": [
+        {
+          "stripId": "s3",
+          "role": "end"
+        }
+      ],
+      "notchType": "miter"
+    },
+    {
+      "id": "j6",
+      "position": {
+        "x": 12.7017,
+        "y": 0
+      },
+      "members": [
+        {
+          "stripId": "s4",
+          "role": "end"
+        }
+      ],
+      "notchType": "miter"
+    },
+    {
+      "id": "j7",
+      "position": {
+        "x": 6.3509,
+        "y": 11
+      },
+      "members": [
+        {
+          "stripId": "s4",
+          "role": "end"
+        }
+      ],
+      "notchType": "miter"
+    },
+    {
+      "id": "j8",
+      "position": {
+        "x": 68.6491,
+        "y": 11
+      },
+      "members": [
+        {
+          "stripId": "s5",
+          "role": "end"
+        }
+      ],
+      "notchType": "miter"
+    },
+    {
+      "id": "j9",
+      "position": {
+        "x": 62.2983,
+        "y": 0
+      },
+      "members": [
+        {
+          "stripId": "s5",
+          "role": "end"
+        }
+      ],
+      "notchType": "miter"
+    }
+  ],
+  "pieceTemplates": [
+    {
+      "id": "pt0",
+      "stripPropertyId": "sp0",
+      "stripId": "s0",
+      "cuts": [
+        {
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "angle": 90,
+          "depth": 1,
+          "role": "end"
+        },
+        {
+          "position": {
+            "x": 29.3013,
+            "y": 0
+          },
+          "angle": 120,
+          "depth": 1,
+          "role": "end"
+        }
+      ]
+    },
+    {
+      "id": "pt1",
+      "stripPropertyId": "sp0",
+      "stripId": "s1",
+      "cuts": [
+        {
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "angle": 90,
+          "depth": 1,
+          "role": "end"
+        },
+        {
+          "position": {
+            "x": 29.3013,
+            "y": 0
+          },
+          "angle": 120,
+          "depth": 1,
+          "role": "end"
+        }
+      ]
+    },
+    {
+      "id": "pt2",
+      "stripPropertyId": "sp0",
+      "stripId": "s2",
+      "cuts": [
+        {
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "angle": 90,
+          "depth": 1,
+          "role": "end"
+        },
+        {
+          "position": {
+            "x": 29.3013,
+            "y": 0
+          },
+          "angle": 120,
+          "depth": 1,
+          "role": "end"
+        }
+      ]
+    },
+    {
+      "id": "pt3",
+      "stripPropertyId": "sp1",
+      "stripId": "s3",
+      "cuts": [
+        {
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "angle": 60,
+          "depth": 1,
+          "role": "end"
+        },
+        {
+          "position": {
+            "x": 12.7017,
+            "y": 0
+          },
+          "angle": 120,
+          "depth": 1,
+          "role": "end"
+        }
+      ]
+    },
+    {
+      "id": "pt4",
+      "stripPropertyId": "sp1",
+      "stripId": "s4",
+      "cuts": [
+        {
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "angle": 60,
+          "depth": 1,
+          "role": "end"
+        },
+        {
+          "position": {
+            "x": 12.7017,
+            "y": 0
+          },
+          "angle": 120,
+          "depth": 1,
+          "role": "end"
+        }
+      ]
+    },
+    {
+      "id": "pt5",
+      "stripPropertyId": "sp1",
+      "stripId": "s5",
+      "cuts": [
+        {
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "angle": 60,
+          "depth": 1,
+          "role": "end"
+        },
+        {
+          "position": {
+            "x": 12.7017,
+            "y": 0
+          },
+          "angle": 120,
+          "depth": 1,
+          "role": "end"
+        }
+      ]
+    }
+  ],
+  "meta": {
+    "difficulty": "advanced",
+    "tags": [
+      "six-fold",
+      "traditional"
+    ],
+    "description": "Three thick strips, each parallel to a cell edge and set near the opposite corner, plus three thin spokes from the centre that butt against the middle of each thick strip.",
+    "thumbnail": null
+  }
+}

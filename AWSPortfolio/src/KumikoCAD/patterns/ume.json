@@ -1,0 +1,404 @@
+{
+  "id": "builtin:ume-sixth",
+  "name": "Ume A",
+  "readOnly": true,
+  "version": 3,
+  "sideLength": 75,
+  "patternParams": {},
+  "stripProperties": [
+    {
+      "id": "sp0",
+      "width": 2,
+      "thickness": 6,
+      "material": "hinoki",
+      "grain": "along",
+      "color": "#e8d5b0",
+      "finish": "natural",
+      "edgeProfile": null
+    },
+    {
+      "id": "sp1",
+      "width": 14,
+      "thickness": 6,
+      "material": "hinoki",
+      "grain": "along",
+      "color": "#e8d5b0",
+      "finish": "natural",
+      "edgeProfile": null
+    }
+  ],
+  "vertices": {
+    "A": {
+      "x": 0,
+      "y": 0
+    },
+    "B": {
+      "x": 75,
+      "y": 0
+    },
+    "C": {
+      "x": 37.5,
+      "y": 64.9519
+    }
+  },
+  "centroid": {
+    "x": 37.5,
+    "y": 21.6506
+  },
+  "_note": "Reference snapshot generated from the ume factory at cellWidth 75, gridStripWidth 0, patternStripWidth 3. Not what is rendered — the factory computes live geometry; this file supplies the template-level fields (id, name, patternParams, stripProperties, meta).",
+  "strips": [
+    {
+      "id": "s0",
+      "start": {
+        "x": 35.7489,
+        "y": 44.703
+      },
+      "end": {
+        "x": 0,
+        "y": 0
+      },
+      "orientation": -2.2454,
+      "cuts": [
+        {
+          "jointId": "j6",
+          "position": {
+            "x": 35.7489,
+            "y": 44.703
+          },
+          "angle": 142.7204,
+          "depth": 1,
+          "role": "end"
+        },
+        {
+          "jointId": "j2",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "angle": 159.578,
+          "depth": 1,
+          "role": "end"
+        },
+        {
+          "jointId": "j2",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "angle": 39.578,
+          "depth": 1,
+          "role": "end"
+        }
+      ],
+      "curve": {
+        "sagitta": 8.574
+      }
+    },
+    {
+      "id": "s1",
+      "start": {
+        "x": 39.2511,
+        "y": 44.703
+      },
+      "end": {
+        "x": 75,
+        "y": 0
+      },
+      "orientation": -0.8962,
+      "cuts": [
+        {
+          "jointId": "j7",
+          "position": {
+            "x": 39.2511,
+            "y": 44.703
+          },
+          "angle": 37.2796,
+          "depth": 1,
+          "role": "end"
+        },
+        {
+          "jointId": "j3",
+          "position": {
+            "x": 75,
+            "y": 0
+          },
+          "angle": 20.422,
+          "depth": 1,
+          "role": "end"
+        },
+        {
+          "jointId": "j3",
+          "position": {
+            "x": 75,
+            "y": 0
+          },
+          "angle": 140.422,
+          "depth": 1,
+          "role": "end"
+        }
+      ],
+      "curve": {
+        "sagitta": -8.574
+      }
+    },
+    {
+      "id": "s2",
+      "start": {
+        "x": 28.8397,
+        "y": 49.9519
+      },
+      "end": {
+        "x": 46.1603,
+        "y": 49.9519
+      },
+      "orientation": 0,
+      "cuts": [
+        {
+          "jointId": "j4",
+          "position": {
+            "x": 28.8397,
+            "y": 49.9519
+          },
+          "angle": 60,
+          "depth": 1,
+          "role": "end"
+        },
+        {
+          "jointId": "j5",
+          "position": {
+            "x": 46.1603,
+            "y": 49.9519
+          },
+          "angle": 120,
+          "depth": 1,
+          "role": "end"
+        },
+        {
+          "jointId": "j0",
+          "position": {
+            "x": 37.5,
+            "y": 46.4541
+          },
+          "angle": 90,
+          "depth": 1,
+          "role": "notch",
+          "notchSide": "right"
+        }
+      ]
+    }
+  ],
+  "joints": [
+    {
+      "id": "j0",
+      "position": {
+        "x": 37.5,
+        "y": 46.4541
+      },
+      "members": [
+        {
+          "stripId": "s2",
+          "role": "notch"
+        }
+      ],
+      "notchType": "taper"
+    },
+    {
+      "id": "j6",
+      "position": {
+        "x": 35.7489,
+        "y": 44.703
+      },
+      "members": [
+        {
+          "stripId": "s0",
+          "role": "end"
+        }
+      ],
+      "notchType": "miter"
+    },
+    {
+      "id": "j2",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "members": [
+        {
+          "stripId": "s0",
+          "role": "end"
+        }
+      ],
+      "notchType": "asymMiter"
+    },
+    {
+      "id": "j7",
+      "position": {
+        "x": 39.2511,
+        "y": 44.703
+      },
+      "members": [
+        {
+          "stripId": "s1",
+          "role": "end"
+        }
+      ],
+      "notchType": "miter"
+    },
+    {
+      "id": "j3",
+      "position": {
+        "x": 75,
+        "y": 0
+      },
+      "members": [
+        {
+          "stripId": "s1",
+          "role": "end"
+        }
+      ],
+      "notchType": "asymMiter"
+    },
+    {
+      "id": "j4",
+      "position": {
+        "x": 28.8397,
+        "y": 49.9519
+      },
+      "members": [
+        {
+          "stripId": "s2",
+          "role": "end"
+        }
+      ],
+      "notchType": "miter"
+    },
+    {
+      "id": "j5",
+      "position": {
+        "x": 46.1603,
+        "y": 49.9519
+      },
+      "members": [
+        {
+          "stripId": "s2",
+          "role": "end"
+        }
+      ],
+      "notchType": "miter"
+    }
+  ],
+  "pieceTemplates": [
+    {
+      "id": "pt0",
+      "stripPropertyId": "sp0",
+      "stripId": "s0",
+      "cuts": [
+        {
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "angle": 142.7204,
+          "depth": 1,
+          "role": "end"
+        },
+        {
+          "position": {
+            "x": 57.2393,
+            "y": 0
+          },
+          "angle": 159.578,
+          "depth": 1,
+          "role": "end"
+        },
+        {
+          "position": {
+            "x": 57.2393,
+            "y": 0
+          },
+          "angle": 39.578,
+          "depth": 1,
+          "role": "end"
+        }
+      ]
+    },
+    {
+      "id": "pt1",
+      "stripPropertyId": "sp0",
+      "stripId": "s1",
+      "cuts": [
+        {
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "angle": 37.2796,
+          "depth": 1,
+          "role": "end"
+        },
+        {
+          "position": {
+            "x": 57.2393,
+            "y": 0
+          },
+          "angle": 20.422,
+          "depth": 1,
+          "role": "end"
+        },
+        {
+          "position": {
+            "x": 57.2393,
+            "y": 0
+          },
+          "angle": 140.422,
+          "depth": 1,
+          "role": "end"
+        }
+      ]
+    },
+    {
+      "id": "pt2",
+      "stripPropertyId": "sp1",
+      "stripId": "s2",
+      "cuts": [
+        {
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "angle": 60,
+          "depth": 1,
+          "role": "end"
+        },
+        {
+          "position": {
+            "x": 17.3205,
+            "y": 0
+          },
+          "angle": 120,
+          "depth": 1,
+          "role": "end"
+        },
+        {
+          "position": {
+            "x": 8.6603,
+            "y": 0
+          },
+          "angle": 90,
+          "depth": 1,
+          "role": "notch"
+        }
+      ]
+    }
+  ],
+  "meta": {
+    "difficulty": "advanced",
+    "tags": [
+      "six-fold",
+      "traditional",
+      "curved"
+    ],
+    "description": "A thick strip across the top corner with a V-notch, and two thin strips bent from the notch down to the bottom corners, meeting at the notch apex. Thin strip width defaults to and is capped at 3 mm.",
+    "thumbnail": null
+  }
+}

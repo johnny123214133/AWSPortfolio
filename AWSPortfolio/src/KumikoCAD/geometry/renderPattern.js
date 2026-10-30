@@ -1,0 +1,270 @@
+// Pure, framework-agnostic computation of "what to draw" for a pattern's
+// strip bodies — extracted from PatternStrips.jsx's StripBody so the exact
+// same geometry feeds both the live Konva rendering (pattern editor) and
+// the offscreen-canvas cache renderer below (pattern icons, panel cells).
+// One source of truth for "how a strip's cut shape becomes a placed
+// polygon" — see PatternStrips.jsx's StripBody for the Y-flip/rotation-sign
+// reasoning this carries over unchanged.
+import { buildStripLocalPoints, buildCurvedStripLocalPoints } from './stripShape.js';
+import { clipFlatToWindow } from './trimStrip.js';
+import { darkenHex } from './color.js';
+import { getTheme, selectionColor, stripEdgeColor } from '../theme/themeRuntime.js';
+import { DEFAULT_PATTERN_STRIP_WIDTH_MM } from './units.js';
+
+// Paint order for the strips, bottom first. Strips are normally painted in
+// array order, but where strips overlap at a lap joint the one on top must be
+// painted last: a half-lap's members carry 'role-top-2' / 'role-bottom-2', a
+// three-strip lap 'role-top-3' / 'role-middle-3' / 'role-bottom-3'. Each lap
+// gives "A is above B" edges; the order is a stable topological sort (ties keep
+// array order), and a cyclic weave — which no pattern here has — just falls
+// back to array order for what's left.
+const RANK = { 'role-top-2': 0, 'role-bottom-2': 1, 'role-top-3': 0, 'role-middle-3': 1, 'role-bottom-3': 2 };
+export function stripPaintOrder(pattern) {
+  const ids = pattern.strips.map((s) => s.id);
+  const index = new Map(ids.map((id, i) => [id, i]));
+  const below = new Map(ids.map((id) => [id, new Set()])); // id -> strips painted before it
+  for (const j of pattern.joints) {
+    if (j.notchType !== 'halfLap' && j.notchType !== 'triLap') continue;
+    for (const a of j.members) for (const b of j.members) {
+      if (RANK[a.role] != null && RANK[b.role] != null && RANK[a.role] < RANK[b.role] && index.has(a.stripId) && index.has(b.stripId)) below.get(a.stripId).add(b.stripId);
+    }
+  }
+  const out = [], done = new Set();
+  while (out.length < ids.length) {
+    const next = ids.find((id) => !done.has(id) && [...below.get(id)].every((b) => done.has(b)))
+      ?? ids.find((id) => !done.has(id));
+    out.push(next); done.add(next);
+  }
+  return out;
+}
+
+export function computeStripRenderData(pattern) {
+  const order = new Map(stripPaintOrder(pattern).map((id, i) => [id, i]));
+  return computeUnorderedStripRenderData(pattern).sort((a, b) => order.get(a.stripId) - order.get(b.stripId));
+}
+
+function computeUnorderedStripRenderData(pattern) {
+  const spMap = Object.fromEntries(pattern.stripProperties.map(sp => [sp.id, sp]));
+  return pattern.strips.map((strip) => {
+    const pt = pattern.pieceTemplates.find(p => p.stripId === strip.id);
+    const sp = pt ? spMap[pt.stripPropertyId] : pattern.stripProperties[0];
+    const width = sp?.width ?? DEFAULT_PATTERN_STRIP_WIDTH_MM;
+    const color = sp?.color ?? '#e8d5b0';
+    // Darkened per-strip rather than one fixed color, so this keeps making
+    // sense once strip colors vary by wood/finish choice — see the request
+    // that prompted this ("we'll revisit it when we add the color mappings
+    // for all the wood and finish types").
+    // The theme may replace it (the dark themes outline a selection in cream).
+    const borderColor = selectionColor(darkenHex(color, 0.35));
+    // A much subtler always-on edge (vs. borderColor's stronger selection
+    // darkening) — "a thin border to the pattern strips just a touch darker
+    // than the current color of the strip... some visual indicator that
+    // shows the strips are separate entities." Derived from the strip's own
+    // (possibly per-strip-overridden) color the same way borderColor is, so
+    // it moves with wood/finish changes too, just far less aggressively.
+    const edgeColor = stripEdgeColor(color, darkenHex(color, 0.15));
+
+    const dx = strip.end.x - strip.start.x;
+    const dy = strip.end.y - strip.start.y;
+    const length = Math.sqrt(dx * dx + dy * dy);
+
+    // (a strip cut off at the panel's edge, see trimStrip.js, is shaped by the end cuts it had whole
+    // and then cut down to its window)
+    const endCuts = (strip.trim?.fullCuts ?? strip.cuts).filter(c => c.role === 'end');
+    const unitDx = Math.cos(strip.orientation);
+    const unitDy = Math.sin(strip.orientation);
+
+    const notchOf = (jointId) => pattern.joints.find(j => j.id === jointId)?.notchType;
+    const localised = endCuts
+      .map(c => ({
+        angle: c.angle,
+        jointId: c.jointId,
+        notchType: notchOf(c.jointId),
+        localX: (c.position.x - strip.start.x) * unitDx + (c.position.y - strip.start.y) * unitDy,
+      }))
+      .sort((a, b) => a.localX - b.localX);
+
+    // A strip end can be two cuts at once ('asymMiter' joints — see
+    // stripShape.js): those cuts are pulled out as a pair for whichever end
+    // they sit nearer, and every other end cut works as before (first = start
+    // end, last = end end).
+    const pairCuts = localised.filter(c => c.notchType === 'asymMiter');
+    const single = localised.filter(c => c.notchType !== 'asymMiter');
+    const asPair = (cs) => cs.map(c => ({ x: c.localX, angle: c.angle }));
+    // Either end — or both — may be a pair.
+    const startPair = pairCuts.filter(c => c.localX < length / 2);
+    const endPair = pairCuts.filter(c => c.localX >= length / 2);
+    const pairAtStart = startPair.length > 0;
+    const pairAtEnd = endPair.length > 0;
+
+    const startCut = pairAtStart ? null : single[0];
+    const endCut = pairAtEnd ? null : single[single.length - 1];
+    const startAngle = startCut?.angle ?? 90;
+    const endAngle = endCut?.angle ?? 90;
+    const startNotchType = pairAtStart ? 'asymMiter' : startCut?.notchType;
+    const endNotchType = pairAtEnd ? 'asymMiter' : endCut?.notchType;
+
+    // Interior V-notches ('notch' cuts, e.g. Sakura A): the cut's position is the notch apex,
+    // `notchSide` which face of the strip ('left' / 'right' of its direction) it is cut into.
+    const notches = (strip.trim?.fullCuts ?? strip.cuts).filter(c => c.role === 'notch').map((c) => {
+      const px = c.position.x - strip.start.x, py = c.position.y - strip.start.y
+      const x = px * unitDx + py * unitDy
+      const yLeft = -px * unitDy + py * unitDx // signed offset to the strip's left (y-up world)
+      const side = c.notchSide === 'right' ? -1 : 1
+      const depth = width / 2 - side * yLeft
+      return { x, side, depth, halfOpen: depth * Math.tan(((c.angle / 2) * Math.PI) / 180) }
+    });
+    // A curved strip (strip.curve = { sagitta }, see curve.js): the outline is the bent band
+    // trimmed by all of its end cuts, whatever their joint types.
+    const curvedCuts = strip.curve ? endCuts.map((c) => {
+      const px = c.position.x - strip.start.x, py = c.position.y - strip.start.y
+      const x = px * unitDx + py * unitDy
+      return { x, y: -px * unitDy + py * unitDx, angle: c.angle, atStart: x < length / 2 }
+    }) : null;
+    const points = strip.curve ? buildCurvedStripLocalPoints(length, width / 2, strip.curve, curvedCuts) : buildStripLocalPoints(
+      length, width / 2, startAngle, endAngle, startNotchType, endNotchType,
+      pairAtStart ? asPair(startPair) : undefined, pairAtEnd ? asPair(endPair) : undefined, notches,
+    );
+    const shapePoints = strip.trim ? clipFlatToWindow(points, strip.trim.window) : points;
+    // See PatternStrips.jsx's StripBody comment — flipping y here AND
+    // negating rotation/position below are both required together.
+    const flippedPoints = shapePoints.map((v, i) => (i % 2 === 1 ? -v : v));
+
+    return {
+      stripId: strip.id,
+      points: flippedPoints,
+      x: strip.start.x,
+      y: -strip.start.y,
+      rotationDeg: -(strip.orientation * 180) / Math.PI,
+      color,
+      borderColor,
+      edgeColor,
+    };
+  });
+}
+
+// The panel's reference cell raster: 128 px x 3 oversample. A strip's edge
+// outline is 1 px at this size, which is a fixed physical width whatever
+// resolution a cell is actually rasterized at (see renderPatternToCanvas's
+// strokeRefPx). The content is fitted into 88% of the canvas (6% margin a side),
+// so for a cell of side `sideLength` mm that width is:
+export const PANEL_REF_PX = 384;
+export const edgeStrokeWidth = (sideLength) => sideLength / (PANEL_REF_PX * 0.88);
+
+/**
+ * Renders a pattern's strip bodies to an offscreen canvas, oversampled for
+ * crisp thin lines/sharp joints under raster upscaling (see the panel-level
+ * brainstorm: raster caching trades vector precision for shape-count/redraw
+ * cost, and oversampling is how that trade is kept from looking blurry).
+ * Returns the canvas element directly — usable as a Konva.Image `image`
+ * source as-is, no conversion needed.
+ *
+ * `drawBoundary` (default false): also strokes the triangle cell outline on
+ * top of the strips, matching PatternLayer.jsx's live boundary line. Off by
+ * default for the panel's per-cell use (CachedPatternImage.jsx) — the grid
+ * already draws its own real-width cell boundaries there, so baking another
+ * one into every cell's image would double up. On for the sidebar thumbnail
+ * (PatternIcon.jsx), where nothing else supplies that context and the
+ * strips would otherwise look like they're just floating in space.
+ *
+ * `selected` (default false): draws every strip with its darker border
+ * stroke — this is the panel's "whole cell is selected" variant (a
+ * different cached image, swapped in wholesale — see CachedPatternImage.jsx
+ * — as opposed to the pattern editor's per-strip selection, which toggles
+ * individual strips' borders in the live Konva rendering instead).
+ *
+ * Deliberately reuses computeStripRenderData's output AS-IS (same points/x/
+ * y/rotationDeg values fed to the live Konva <Line> elsewhere) rather than
+ * re-deriving a differently-flipped version for canvas — the outer
+ * fit-to-canvas transform below is a plain uniform positive scale+translate,
+ * which doesn't interact with flip/rotation sign at all, so composing it
+ * with already-correct Konva-convention data can't introduce a new sign bug
+ * the way re-deriving a second flip convention could.
+ */
+export function renderPatternToCanvas(pattern, sizePx, oversample = 3, drawBoundary = false, selected = false, strokeRefPx = 0) {
+  const { A, B, C } = pattern.vertices;
+  const flip = (p) => ({ x: p.x, y: -p.y }); // same convention as scene/viewportMath.js
+  const [fA, fB, fC] = [A, B, C].map(flip);
+  const minX = Math.min(fA.x, fB.x, fC.x), maxX = Math.max(fA.x, fB.x, fC.x);
+  const minY = Math.min(fA.y, fB.y, fC.y), maxY = Math.max(fA.y, fB.y, fC.y);
+  const spanX = maxX - minX || 1, spanY = maxY - minY || 1;
+
+  const px = Math.max(1, Math.round(sizePx * oversample));
+  const canvas = document.createElement('canvas');
+  canvas.width = px;
+  canvas.height = px;
+  const ctx = canvas.getContext('2d');
+
+  const margin = px * 0.06;
+  const scale = Math.min((px - 2 * margin) / spanX, (px - 2 * margin) / spanY);
+  const offsetX = (px - spanX * scale) / 2 - minX * scale;
+  const offsetY = (px - spanY * scale) / 2 - minY * scale;
+
+  // Edge/selection/boundary strokes are 1 (or 2.5) canvas px wide — "a fixed,
+  // crisp on-image thickness". For the panel's zoom tiers (several canvas
+  // sizes of the SAME cell) `strokeRefPx` is the canvas size at which that
+  // many px is meant, so a bigger tier draws proportionally thicker strokes
+  // and every tier shows the same physical edge width (edgeStrokeWidth()
+  // below). 0 (the default; icons and the like) = plain 1 px.
+  const strokePx = strokeRefPx > 0 ? px / strokeRefPx : 1;
+
+  ctx.save();
+  ctx.translate(offsetX, offsetY);
+  ctx.scale(scale, scale);
+
+  for (const s of computeStripRenderData(pattern)) {
+    ctx.save();
+    ctx.translate(s.x, s.y);
+    ctx.rotate((s.rotationDeg * Math.PI) / 180);
+    ctx.beginPath();
+    for (let i = 0; i < s.points.length; i += 2) {
+      if (i === 0) ctx.moveTo(s.points[i], s.points[i + 1]);
+      else ctx.lineTo(s.points[i], s.points[i + 1]);
+    }
+    ctx.closePath();
+    ctx.fillStyle = s.color;
+    ctx.fill();
+    // Selection border takes priority when selected (same as the live Konva
+    // rendering — PatternStrips.jsx's StripBody); otherwise every strip
+    // still gets the subtle always-on edge, so cached renders (pattern
+    // icons, panel cells) look consistent with the live pattern editor.
+    ctx.strokeStyle = selected ? s.borderColor : s.edgeColor;
+    // Same 1/scale trick as the boundary stroke below — a fixed, crisp
+    // on-image thickness regardless of the pattern's own size.
+    ctx.lineWidth = ((selected ? 2.5 : 1) * strokePx) / scale;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  if (drawBoundary) {
+    // Same boundary color as PatternLayer.jsx's live boundary <Line> (the theme's patternBoundary).
+    // lineWidth divided by `scale` here for the same reason Konva's
+    // strokeScaleEnabled={false} exists on that live line — without it, the
+    // ctx.scale(scale, scale) above would make the boundary's thickness
+    // track the pattern's own size instead of staying a fixed, crisp
+    // on-image thickness.
+    ctx.beginPath();
+    ctx.moveTo(fA.x, fA.y);
+    ctx.lineTo(fB.x, fB.y);
+    ctx.lineTo(fC.x, fC.y);
+    ctx.closePath();
+    ctx.strokeStyle = getTheme().canvas.patternBoundary;
+    ctx.lineWidth = (1.5 * strokePx) / scale;
+    ctx.stroke();
+  }
+
+  ctx.restore();
+
+  // Where the FULL canvas (all px×px of it, not just the pattern content)
+  // maps back to in the same flipped local coordinate space the pattern's
+  // own vertices/strips live in — canvas (0,0) is top-left (Y-down);
+  // inverting the scale+translate above gives that corner's world position
+  // and the world-space size of one canvas pixel row/column. Callers place
+  // the image with this rectangle directly — no need to know anything about
+  // the margin/fit logic above.
+  const worldX = -offsetX / scale;
+  const worldY = -offsetY / scale;
+  const worldSize = px / scale;
+
+  return { canvas, worldX, worldY, worldSize };
+}
